@@ -5,7 +5,7 @@
             "Name" : "Decoder Testcase",
             "TestConfigs" : {
                 "Domain": "Decoder",
-                "InputPath": "./data/resource/simple_AVC_720p_30fps_90frames.264",
+                "InputPath": "./data/resource/simple_AVC_720p_10fps_90frames.264",
                 "NumFrames": -1,
                 "CodecName": "AVC",
                 "PixelFormat": "NV12",
