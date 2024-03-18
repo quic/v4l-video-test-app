@@ -103,6 +103,7 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 
 | S.No. | Tag name               | Tag Description                                                | Type           | Possible values                | Mandatory / Optional       |
 |:-----:|:----------------------:|:--------------------------------------------------------------:|:--------------:|:------------------------------:|:--------------------------:|
+|       |                        |                                                                |                |                                |                            |
 | 1     | "ExecutionMode"        | Execution Mode in case of Multiple testcases execution         | String         | "Sequential" / "Concurrent"    | Optional                   |
 |       |                        |                                                                |                |                                |                            |
 | 2     | "TestCases"            | Array of testcases we need to execute                          | Array          | -                              | Mandatory                  |
@@ -131,8 +132,7 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 |       |                        |                                                                |                |                                |                            |
 | 14    | "StaticControls"       | Configurations to be set during initialization of the VPU      | Array          | Values from Controls Table     | Mandatory                  |
 |       |                        |                                                                |                |                                |                            |
-| 15    | "DynamicControls"      | Dynamic Configurations to be set to VPU during                 |                |                                |                            |
-|       |                        | testcase execution. (Only applicable for Encoders)             | Array          | Values from Controls Table     | Optional                   |
+| 15    | "DynamicControls"      | Dynamic Configurations to be set to VPU during testcase execution. (Only applicable for Encoders) | Array | Values from Controls Table | Optional |
 |       |                        |                                                                |                |                                |                            |
 | 16    | "Outputpath"           | Absolute file path of Output Dump file                         | String         | Any accessable path in device  | Optional                   |
 |       |                        |                                                                |                |                                |                            |
@@ -146,14 +146,10 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 
 | S.No. | Static/Dynamic Control | Id                          | Vtype          | Value                                                              | Mandatory / Optional      |
 |:-----:|:----------------------:|:---------------------------:|:--------------:|:------------------------------------------------------------------:|:-------------------------:|
-| 1     | Static Control         | "Profile"                   | "String"       | AVC Profiles: {"BASELINE", "MAIN", "HIGH"}                         | Mandatory                 |
-|       |                        |                             |                | HEVC Profiles: {"MAIN", "MAIN10", "MAIN_SP"}                       |                           |
+|       |                        |                                                                |                |                                |                            |
+| 1     | Static Control         | "Profile"                   | "String"       | **AVC Profiles:** {"BASELINE", "MAIN", "HIGH"} **HEVC Profiles:** {"MAIN", "MAIN10", "MAIN_SP"}| Mandatory |
 |       |                        |                             |                |                                                                    |                           |
-| 2     | Static Control         | "Level"                     | "String"       | AVC Levels:                                                        |                           |
-|       |                        |                             |                | {"1.0", "1B", "1.1", "1.2", "1.3", "2.0", "2.1", "2.2",            | Mandatory                 |
-|       |                        |                             |                | "3.0", "3.1", "3.2", "4.0", "4.1", "4.2", "5.0", "5.1"}            |                           |
-|       |                        |                             |                | HEVC Levels:                                                       |                           |
-|       |                        |                             |                | {"1.0", "2.0", "2.1", "3.0", "3.1", "4.0", "4.1", "5.0"}           |                           |
+| 2     | Static Control         | "Level"                     | "String"       | **AVC Levels:** {"1.0", "1B", "1.1", "1.2", "1.3", "2.0", "2.1", "2.2", "3.0", "3.1", "3.2", "4.0", "4.1", "4.2", "5.0", "5.1"}     **HEVC Levels:** {"1.0", "2.0", "2.1", "3.0", "3.1", "4.0", "4.1", "5.0"} | Mandatory                 |
 |       |                        |                             |                |                                                                    |                           |
 | 3     | Static/Dynamic Control | "BitRate"                   | "Int"          | [1, 100000000]                                                     | Mandatory                 |
 |       |                        |                             |                |                                                                    |                           |
@@ -163,41 +159,27 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 |       |                        |                             |                |                                                                    |                           |
 | 6     | Static Control         | "Tier"                      | "String"       | {"MAIN", "HIGH"}                                                   | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 7     | Static Control         | "MinQP"                     | "Int"          | Minimum quantization parameter for HEVC.                           |                           |
-|       |                        |                             |                | Valid range: [0, 51] for 8 bit and [0 to 63] for 10 bit.           | Optional                  |
-|       |                        |                             |                | Minimum quantization parameter for H264.                           |                           |
-|       |                        |                             |                | Valid range: [0 to 51]                                             |                           |
+| 7     | Static Control         | "MinQP"                     | "Int"          | Minimum quantization parameter for HEVC. Valid range: [0, 51] for 8 bit and [0 to 63] for 10 bit. Minimum quantization parameter for H264. Valid range: [0 to 51] | Optional                    |
 |       |                        |                             |                |                                                                    |                           |
-| 8     | Static Control         | "MaxQP"                     | "Int"          | Maximum quantization parameter for HEVC.                           |                           |
-|       |                        |                             |                | Valid range: from 0 to 51 for 8 bit and from 0 to 63 for 10 bit.   |                           |
-|       |                        |                             |                | Maximum quantization parameter for H264. Valid range: from 0 to 51 | Optional                  |
+| 8     | Static Control         | "MaxQP"                     | "Int"          | Maximum quantization parameter for HEVC. Valid range: [0, 51] for 8 bit and [0 to 63] for 10 bit. Maximum quantization parameter for H264. Valid range: [0 to 51] | Optional                    |
 |       |                        |                             |                |                                                                    |                           |
-| 9     | Static/Dynamic Control | "IQP"                       | "Int"          | Quantization parameter for an I frame.                             |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 9     | Static/Dynamic Control | "IQP"                       | "Int"          | Quantization parameter for an I frame. Valid range: [MinQP, MaxQP] | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 10    | Static/Dynamic Control | "PQP"                       | "Int"          | Quantization parameter for an P frame.                             |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 10    | Static/Dynamic Control | "PQP"                       | "Int"          | Quantization parameter for an P frame. Valid range: [MinQP, MaxQP] | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 11    | Static/Dynamic Control | "BQP"                       | "Int"          | Quantization parameter for an B frame.                             |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 11    | Static/Dynamic Control | "BQP"                       | "Int"          | Quantization parameter for an B frame. Valid range: [MinQP, MaxQP] | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 12    | Static Control         | "MaxIQP"                    | "Int"          | Max quantization parameter to limit I frame quality to a range.    |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 12    | Static Control         | "MaxIQP"                    | "Int"          | Max quantization parameter to limit I frame quality to a range. Valid range: [MinQP, MaxQP]    | Optional  |
 |       |                        |                             |                |                                                                    |                           |
-| 13    | Static Control         | "MaxPQP"                    | "Int"          | Max quantization parameter to limit P frame quality to a range.    |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 13    | Static Control         | "MaxPQP"                    | "Int"          | Max quantization parameter to limit P frame quality to a range. Valid range: [MinQP, MaxQP]    | Optional  |
 |       |                        |                             |                |                                                                    |                           |
-| 14    | Static Control         | "MaxBQP"                    | "Int"          | Max quantization parameter to limit B frame quality to a range.    |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 14    | Static Control         | "MaxBQP"                    | "Int"          | Max quantization parameter to limit B frame quality to a range. Valid range: [MinQP, MaxQP]    | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 15    | Static Control         | "MinIQP"                    | "Int"          | Min quantization parameter to limit I frame quality to a range.    |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 15    | Static Control         | "MinIQP"                    | "Int"          | Min quantization parameter to limit I frame quality to a range. Valid range: [MinQP, MaxQP]    | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 16    | Static Control         | "MinPQP"                    | "Int"          | Min quantization parameter to limit P frame quality to a range.    |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 16    | Static Control         | "MinPQP"                    | "Int"          | Min quantization parameter to limit P frame quality to a range. Valid range: [MinQP, MaxQP]    | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
-| 17    | Static Control         | "MinBQP"                    | "Int"          | Min quantization parameter to limit B frame quality to a range.    |                           |
-|       |                        |                             |                | Valid range: [MinQP, MaxQP].                                       | Optional                  |
+| 17    | Static Control         | "MinBQP"                    | "Int"          | Min quantization parameter to limit B frame quality to a range. Valid range: [MinQP, MaxQP]    | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
 | 18    | Static Control         | "EntropyCoding"             | "String"       | {"CABAC", "CAVLC"}                                                 | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
@@ -257,6 +239,6 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 |       |                        |                             |                |                                                                    |                           |
 | 46    | Static Control         | "BasePriorityID"            | "Int"          | [0, 63]                                                            | Optional                  |
 
-## 5. Licence
+## 5. License
 
 Project is licensed under the BSD-3-Clause-Clear License. See LICENSE.txt for the full license text.
