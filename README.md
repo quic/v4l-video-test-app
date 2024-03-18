@@ -1,18 +1,12 @@
-# V4l2 Video Test Application
+# V4L Video Test Application
 
-## 1. What Is This
+## 1. What Is This ?
 
-This is a simple video test application which uses Linux V4l2 interfaces to
-simulate several basic encoder and decoder behaviors.
+This is a simple video test application which uses Linux V4l2 interfaces to simulate several basic encoder and decoder behaviors. The main purpose of this test application is to test the compatibility and validity of video drivers on Unix-like operating systems.
 
-The main purpose of this test application is to test the compatibility and
-validity of video drivers on Unix-like operating systems.
+## 2. How To Build This Project ?
 
-## 2. How To Build This Project
-
-This project is not a standalone project, but uses several dependencies.:
-
-Few Opensource dependencies are :
+This project is not a standalone project, but uses several dependencies. Few Opensource dependencies are :
 
 1. FFMpeg - used as input demuxer.
 2. JsonCpp -  used as configuration parser.
@@ -22,8 +16,8 @@ Few Opensource dependencies are :
 To compile this project we need to setup the cross compiling environment for ARM architecture.
 This project was written in Ubuntu 20.04-WSL (Linux Kernel newer or equal to 6.2(6.6 recommended)).
 
-1. Install ARM Cross-compiler toolchain : https://developer.arm.com/downloads/-/gnu-a
-   Recommended Compiler : gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+1. Install ARM Cross-compiler toolchain : [**Compiler**](https://developer.arm.com/downloads/-/gnu-a)
+   (*Recommended : gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz*)
 
 2. Install the latest CMake for compilation of project.
 
@@ -59,16 +53,13 @@ aarch64-none-linux-gnu-g++ -v
 cd /usr/aarch64-linux-gnu/aarch64-none-linux-gnu/libc/usr/include
 sudo mv linux linux_bak
 sudo ln -s /usr/include/linux ./linux
-
 ```
 
 ### 2.2 Install and compile the dependent projects
 
-Run the script "prepare_3p_module.sh" present in "v4l_video_test_app/third-parties"
-folder to clone, compile and install the shared libraries and include file.
+Run the script [*prepare_3p_module.sh*](https://github.com/quic/v4l-video-test-app/blob/master/third-parties/prepare_3p_module.sh) present in [*v4l_video_test_app/third-parties*](https://github.com/quic/v4l-video-test-app/tree/master/third-parties) folder to clone, compile and install the shared libraries and include file.
 
-The install location of output headers & libs can be modified in this script.
-But please remeber to update the top-level CMakeLists.txt to make sure that they can be found.
+**NOTE:** The install location of output headers & libs can be modified in this script. Update the top-level [*CMakeLists.txt*](https://github.com/quic/v4l-video-test-app/blob/master/CMakeLists.txt) to make sure that they can be found.
 
 ```bash
 cd v4l_video_test_app/third-parties
@@ -80,8 +71,7 @@ chmod +x prepare_3p_module.sh
 
 Once the environment is set and dependent projects are install we are ready for compiling our project.
 
-Run script "build.sh" to build the project.
-This would build the project into an executable file "iris_v4l2_test" in "v4l_video_test_app/build" folder.
+Run script [*build.sh*](https://github.com/quic/v4l-video-test-app/blob/master/build.sh) to build the project. This would build the project into an executable file **"iris_v4l2_test"** in "v4l_video_test_app/build" folder.
 
 ```bash
 cd v4l_video_test_app/
@@ -241,4 +231,4 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 
 ## 5. License
 
-Project is licensed under the BSD-3-Clause-Clear License. See LICENSE.txt for the full license text.
+Project is licensed under the **BSD-3-Clause-Clear License**. See [LICENSE.txt](https://github.com/quic/v4l-video-test-app/blob/master/LICENSE.txt) for the full license text.
