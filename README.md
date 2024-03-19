@@ -15,7 +15,7 @@ This project requires few opensource dependencies for compilation and execution 
 
 To compile this project we need to setup the cross compiling environment for ARM architecture.
 
-This project was written in Ubuntu 20.04-WSL (*Linux Kernel newer or equal to 6.2 (6.6 recommended)*).
+#### **NOTE: This project was written in Ubuntu 20.04-WSL. (*Linux Kernel newer or equal to 6.2 (6.6 recommended)*)
 
 #### 2.1.1. Install ARM Cross-compiler toolchain : [**Compiler**](https://developer.arm.com/downloads/-/gnu-a)
 Recommended : gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
@@ -52,7 +52,7 @@ sudo cp -r ./* /usr/aarch64-linux-gnu
 export ARCH=arm64
 export PATH="$PATH:/usr/aarch64-linux-gnu/bin"
 export PATH="$PATH:/pkg/asw/compilers/gnu/linaro-toolchain/5.1/bin/"
-export CROSS_COMPILE=/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
+export CROSS_COMPILE=/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ Run the script [**prepare_3p_module.sh**](https://github.com/quic/v4l-video-test
 ```bash
 # ----------------------------------------------------------------------------------------------------------------------------------
 # Give prepare_3p_module.sh executable rights and run the scripts
-cd v4l_video_test_app/third-parties
+cd v4l-video-test-app/third-parties
 chmod +x prepare_3p_module.sh
 ./prepare_3p_module.sh
 # ----------------------------------------------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ Run script [**build.sh**](https://github.com/quic/v4l-video-test-app/blob/master
 ```bash
 # ----------------------------------------------------------------------------------------------------------------------------------
 # Give build.sh executable rights and run the scripts
-cd v4l_video_test_app/
+cd v4l-video-test-app/
 chmod +x build.sh
 ./build.sh
 # ----------------------------------------------------------------------------------------------------------------------------------
