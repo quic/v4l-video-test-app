@@ -2,94 +2,137 @@
 
 ## 1. What Is This ?
 
-This is a simple video test application which uses Linux V4l2 interfaces to simulate several basic encoder and decoder behaviors. The main purpose of this test application is to test the compatibility and validity of video drivers on Unix-like operating systems.
+This is a simple video test application which uses Linux V4L interfaces to simulate several basic Encoder and Decoder behaviors. The main purpose of this test application is to test the compatibility and validity of video drivers on Unix-like operating systems.
 
 ## 2. How To Build This Project ?
 
-This project is not a standalone project, but uses several dependencies. Few Opensource dependencies are :
+This project requires few opensource dependencies for compilation and execution :
 
-1. FFMpeg - used as input demuxer.
-2. JsonCpp -  used as configuration parser.
+1. [**FFMpeg**](https://git.ffmpeg.org/ffmpeg.git) - used as input demuxer.
+2. [**JsonCpp**](https://github.com/open-source-parsers/jsoncpp) -  used as configuration parser.
 
-### 2.1 Setup Development Environment
+### 2.1. Setup Development Environment
 
 To compile this project we need to setup the cross compiling environment for ARM architecture.
-This project was written in Ubuntu 20.04-WSL (Linux Kernel newer or equal to 6.2(6.6 recommended)).
 
-1. Install ARM Cross-compiler toolchain : [**Compiler**](https://developer.arm.com/downloads/-/gnu-a)
-   (*Recommended : gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz*)
+This project was written in Ubuntu 20.04-WSL (*Linux Kernel newer or equal to 6.2 (6.6 recommended)*).
 
-2. Install the latest CMake for compilation of project.
+#### 2.1.1. Install ARM Cross-compiler toolchain : [**Compiler**](https://developer.arm.com/downloads/-/gnu-a)
+Recommended : gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+
+#### 2.1.2. Install the latest CMake for compilation of project.
 
 ```bash
 sudo apt-get -y install cmake
 ```
 
-3. Follow the below commands to setup your compiler
+#### 2.1.3. Follow the below commands to setup your compiler
 
 ```bash
-# Unzip tool in /local/
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Copy the compressed compiler in /local/ in your machine. Unzip the compiler in /local/
+cd /local/
 tar -xvf ./gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+# ----------------------------------------------------------------------------------------------------------------------------------
 
-cd gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu
 
+# ----------------------------------------------------------------------------------------------------------------------------------
 # Create toolchain directory
 sudo mkdir -p /usr/aarch64-linux-gnu
+# ----------------------------------------------------------------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------------------------------------------------------------
 # Copy toolchain files to dst directory
+cd gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu
 sudo cp -r ./* /usr/aarch64-linux-gnu
+# ----------------------------------------------------------------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------------------------------------------------------------
 # Add paths for the environment
-export PATH="$PATH:/usr/aarch64-linux-gnu/bin"
 export ARCH=arm64
-export CROSS_COMPILE=/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
+export PATH="$PATH:/usr/aarch64-linux-gnu/bin"
 export PATH="$PATH:/pkg/asw/compilers/gnu/linaro-toolchain/5.1/bin/"
+export CROSS_COMPILE=/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
+# ----------------------------------------------------------------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------------------------------------------------------------
 # To check if the compiler is properly set use the below commands
 aarch64-none-linux-gnu-gcc -v
 aarch64-none-linux-gnu-g++ -v
+# ----------------------------------------------------------------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------------------------------------------------------------
 # Setup the include file for linux headers
 cd /usr/aarch64-linux-gnu/aarch64-none-linux-gnu/libc/usr/include
 sudo mv linux linux_bak
 sudo ln -s /usr/include/linux ./linux
+# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
 ### 2.2 Install and compile the dependent projects
 
-Run the script [*prepare_3p_module.sh*](https://github.com/quic/v4l-video-test-app/blob/master/third-parties/prepare_3p_module.sh) present in [*v4l_video_test_app/third-parties*](https://github.com/quic/v4l-video-test-app/tree/master/third-parties) folder to clone, compile and install the shared libraries and include file.
+Run the script [**prepare_3p_module.sh**](https://github.com/quic/v4l-video-test-app/blob/master/third-parties/prepare_3p_module.sh) present in [**v4l_video_test_app/third-parties**](https://github.com/quic/v4l-video-test-app/tree/master/third-parties) folder to clone, compile and install the shared libraries and include file.
 
-**NOTE:** The install location of output headers & libs can be modified in this script. Update the top-level [*CMakeLists.txt*](https://github.com/quic/v4l-video-test-app/blob/master/CMakeLists.txt) to make sure that they can be found.
+##### **NOTE: The install location of output headers & libs can be modified in this script. Update the top-level [**CMakeLists.txt**](https://github.com/quic/v4l-video-test-app/blob/master/CMakeLists.txt) to make sure that they can be found.
 
+#### 2.2.1. Follow the below commands to compile the third party dependencies
 ```bash
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Give prepare_3p_module.sh executable rights and run the scripts
 cd v4l_video_test_app/third-parties
 chmod +x prepare_3p_module.sh
 ./prepare_3p_module.sh
+# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
-### 2.3 Build & Test The Project
+### 2.3. Build & Test The Project
 
 Once the environment is set and dependent projects are install we are ready for compiling our project.
 
-Run script [*build.sh*](https://github.com/quic/v4l-video-test-app/blob/master/build.sh) to build the project. This would build the project into an executable file **"iris_v4l2_test"** in "v4l_video_test_app/build" folder.
+Run script [**build.sh**](https://github.com/quic/v4l-video-test-app/blob/master/build.sh) to build the project. This would build the project into an executable file **"iris_v4l2_test"** in "v4l_video_test_app/build" folder.
+
+#### 2.3.1. Follow the below commands to compile the executable
 
 ```bash
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Give build.sh executable rights and run the scripts
 cd v4l_video_test_app/
 chmod +x build.sh
 ./build.sh
+# ----------------------------------------------------------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Give newly created binary iris_v4l2_test executable rights
 cd build/
 chmod +x iris_v4l2_test
+# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
-Upload this executable file and data folder to the device (using "adb push ..." or some other methods according to your device and platform).
+Upload this executable file and data folder to the device *(using "adb push ..." or some other methods according to your device and platform)*.
+
+#### 2.3.2. Follow the below commands to run the tests
 
 ```bash
+# ----------------------------------------------------------------------------------------------------------------------------------
+# This commands helps in understanding the requirement and options for running the test
 ./iris_v4l2_test --help
+# ----------------------------------------------------------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Command to run the Encoder testcase.
 ./iris_v4l2_test -e -c ./data/config/h264Encoder.json
+# ----------------------------------------------------------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Command to run the Decoder testcase.
 ./iris_v4l2_test -d -c ./data/config/h264Decoder.json
+# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
 ## 3. Tags Table
+
+This table specify the valid set of tags and it's possible value for creation of the JSON file, which is used as a config file to run the test.
+
 
 | S.No. | Tag name               | Tag Description                                                | Type           | Possible values                | Mandatory / Optional       |
 |:-----:|:----------------------:|:--------------------------------------------------------------:|:--------------:|:------------------------------:|:--------------------------:|
@@ -131,8 +174,11 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 | 18    | "InputBufferCount"     | Max Number of Input Buffers to circulate for test execution    | Integer        | Dec: [1,16] Enc: [1,32]        | Optional                   |
 |       |                        |                                                                |                |                                |                            |
 | 19    | "OutputBufferCount"    | Max Number of Output Buffers to circulate for test execution   | Integer        | Dec: [1,16] Enc: [1,32]        | Optional                   |
+|       |                        |                                                                |                |                                |                            |
 
 ## 4. Controls Table
+This table specify the vaild controls which can be used and their possible value to run an Encoder test. These controls are given as StaticControls or DynamicControls in JSON config file.
+
 
 | S.No. | Static/Dynamic Control | Id                          | Vtype          | Value                                                              | Mandatory / Optional      |
 |:-----:|:----------------------:|:---------------------------:|:--------------:|:------------------------------------------------------------------:|:-------------------------:|
@@ -228,6 +274,7 @@ Upload this executable file and data folder to the device (using "adb push ..." 
 | 45    | Static/Dynamic Control | "InjectKeyFrame"            | "Int"          | Any Frame Number                                                   | Optional                  |
 |       |                        |                             |                |                                                                    |                           |
 | 46    | Static Control         | "BasePriorityID"            | "Int"          | [0, 63]                                                            | Optional                  |
+|       |                        |                             |                |                                                                    |                           |
 
 ## 5. License
 
