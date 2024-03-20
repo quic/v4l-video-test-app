@@ -238,7 +238,7 @@ int getRegexMatchFileNames(std::string regexPath,
     int i;
 
     if (regexPath.empty()) {
-        printf("Error: no configure file found.\n");
+        printf("Error: no configure file found. Run \"./iris_v4l2_test --help\" for more info.\n");
         return -EINVAL;
     }
 
@@ -328,6 +328,7 @@ void runAndWaitForComplete(
 static void showUsage() {
     printf("iris_v4l2_test [V4L Video Test app] \n");
     printf("Usage : iris_v4l2_test [OPTIONS] CONFIG.json\n");
+    printf("[OPTIONS] : --help    : -h : No Argument Required : Display the options\n");
     printf("[OPTIONS] : --decoder : -d : No Argument Required : Specify encoder testcase\n");
     printf("[OPTIONS] : --encoder : -e : No Argument Required : Specify decoder testcase\n");
     printf("[OPTIONS] : --config  : -c : Argument Required    : Absolute path of config file\n");
@@ -345,10 +346,11 @@ int main(int argc, char** argv) {
             {"help",     no_argument,       0,  'h' },
             {"config",   required_argument, 0,  'c' },
             {"decoder",  no_argument,       0,  'd' },
-            {"encoder",  no_argument,       0,  'e' }
+            {"encoder",  no_argument,       0,  'e' },
+            {0,          0,                 0,   0  }
         };
 
-        int opt = getopt_long(argc, argv, "h:c:de",
+        int opt = getopt_long(argc, argv, "h:c:d:e:",
                 longOpts, &optIndex);
 
         if (opt == -1) {
@@ -358,7 +360,7 @@ int main(int argc, char** argv) {
         switch (opt) {
             case 'h':
                 showUsage();
-                break;
+                return 0;
             case 'c':
                 configPath = optarg;
                 printf("Config path: %s\n", configPath.c_str());
@@ -368,7 +370,7 @@ int main(int argc, char** argv) {
                 printf("V4L %s Testcase\n", opt == 'd' ? "Decoder" : "Encoder");
                 break;
             default:
-                printf("Error: invalid option\n");
+                printf("Error: invalid option. Run \"./iris_v4l2_test --help\" for more info.\n");
                 return -1;
         }
     }
