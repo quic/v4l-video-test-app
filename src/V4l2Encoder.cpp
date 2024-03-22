@@ -214,7 +214,7 @@ int V4l2Encoder::queryControlsHEVC(uint32_t level, uint32_t tier) {
 }
 
 int V4l2Encoder::configureInput() {
-    LOG("V4l2Encoder::configureInput().\n");
+    LOGV("V4l2Encoder::configureInput().\n");
     struct v4l2_format fmt;
     struct v4l2_frmsizeenum fsize;
     struct v4l2_frmivalenum fival;
@@ -271,7 +271,7 @@ int V4l2Encoder::configureInput() {
     mInputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
     mStride = fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
     mScanline = calc_scanline_aligned(mHeight, mStride, mInputSize, mPixelFmt);
-    LOG("%s: WxH(%dx%d), stride(%d), scanline(%d), inputSize(%d)\n", __func__,
+    LOGV("%s: WxH(%dx%d), stride(%d), scanline(%d), inputSize(%d)\n", __func__,
         mWidth, mHeight, mStride, mScanline, mInputSize);
 
     if (mStride > mWidth || mScanline > mHeight) {
@@ -304,7 +304,7 @@ int V4l2Encoder::configureInput() {
 #endif
 
     if (mActualInputCount < mMinInputCount) {
-        LOG("update input count from %d to %d\n", mActualInputCount,
+        LOGV("update input count from %d to %d\n", mActualInputCount,
             mMinInputCount);
         mActualInputCount = mMinInputCount;
     }
@@ -318,13 +318,13 @@ int V4l2Encoder::configureInput() {
         return ret;
     }
     mActualInputCount = reqBufs.count;
-    LOG("%s: %d input buffers got from reqBufs\n", __func__, mActualInputCount);
+    LOGI("%s: %d input buffers got from reqBufs\n", __func__, mActualInputCount);
 
     return 0;
 }
 
 int V4l2Encoder::configureOutput() {
-    LOG("V4l2Encoder::configureOutput().");
+    LOGV("V4l2Encoder::configureOutput().");
     struct v4l2_format fmt;
     struct v4l2_requestbuffers reqBufs;
     struct v4l2_control ctrl;
@@ -348,11 +348,11 @@ int V4l2Encoder::configureOutput() {
 #endif
 
     if (mActualOutputCount < mMinOutputCount) {
-        LOG("update output count from %d to %d\n", mActualOutputCount,
+        LOGV("update output count from %d to %d\n", mActualOutputCount,
             mMinOutputCount);
         mActualOutputCount = mMinOutputCount;
     }
-    LOG("%s: outputsize: %d, actualoutputcount:%d\n", __func__, mOutputSize,
+    LOGV("%s: outputsize: %d, actualoutputcount:%d\n", __func__, mOutputSize,
         mActualOutputCount);
     // LOG("configureOutput: WxH(%dx%d), fmt(%x)\n", mWidth, mHeight, mCodec);
 
@@ -365,7 +365,7 @@ int V4l2Encoder::configureOutput() {
         return ret;
     }
     mActualOutputCount = reqBufs.count;
-    LOG("%s: %d output buffers got from reqBufs\n", __func__,
+    LOGI("%s: %d output buffers got from reqBufs\n", __func__,
         mActualOutputCount);
     return 0;
 }
@@ -376,14 +376,14 @@ int V4l2Encoder::feedInputDataToV4l2Buffer(std::shared_ptr<v4l2_buffer> buf,
     int ret = 0;
     auto itr = mInputDMABuffersPool.find(buf->index);
     if (itr == mInputDMABuffersPool.end()) {
-        LOG("Error: no DMA buffer found for buffer index: %d\n", buf->index);
+        LOGE("Error: no DMA buffer found for buffer index: %d\n", buf->index);
         return -EINVAL;
     }
     auto& dmaBuf = (*itr).second;
 
     MapBuf map(NULL, dmaBuf->mSize, PROT_READ | PROT_WRITE, MAP_SHARED, dmaBuf->mFd, 0);
     if (!map.isMapSucess()) {
-        LOG("Error: failed to mmap output buffer\n");
+        LOGE("Error: failed to mmap output buffer\n");
         return -EINVAL;
     }
     void* bufAddr = map.getMappedAddr();
@@ -397,14 +397,14 @@ int V4l2Encoder::feedInputDataToV4l2Buffer(std::shared_ptr<v4l2_buffer> buf,
     sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
     ret = ioctl(dmaBuf->mFd, DMA_BUF_IOCTL_SYNC, &sync);
     if (ret) {
-        LOG("debug: input read DMA_BUF_SYNC_START failed with err = %d\n", ret);
+        LOGD("input read DMA_BUF_SYNC_START failed with err = %d\n", ret);
     }
     int pkt_size = mYUVParser->fillPacketData(bufAddr, frmWidth, frmHeight, frmStride, frmScanline,
                                               mPixelFmt, eos);
     sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
     ret = ioctl(dmaBuf->mFd, DMA_BUF_IOCTL_SYNC, &sync);
     if (ret) {
-        LOG("debug: input read DMA_BUF_SYNC_END failed with err = %d\n", ret);
+        LOGD("input read DMA_BUF_SYNC_END failed with err = %d\n", ret);
     }
 
     buf->m.planes[0].bytesused = pkt_size;
@@ -492,20 +492,20 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         int ret = 0;
         setDrainLastFlagReceived(false);
         setDrainSent(false);
-        LOG("queueBuffers: last flag for drain arrived\n");
+        LOGW("queueBuffers: last flag for drain arrived\n");
         ret = start();
         if (ret != 0) {
-            LOG("Error: queueBuffers: resume failed.\n");
+            LOGE("Error: queueBuffers: resume failed.\n");
             return ret;
         }
         return ret;
     };
     auto handleDrainEvent = [&]() -> int {
         int ret = 0;
-        LOG("queueBuffers: draining pending\n");
+        LOGW("queueBuffers: draining pending\n");
         ret = stop();
         if (ret) {
-            LOG("Error: queueBuffers: draining failed\n");
+            LOGE("Error: queueBuffers: draining failed\n");
             return ret;
         }
         return ret;
@@ -521,7 +521,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
             }
             usleep(sleepMs * 1000);
             if ((retry % midtry) == 0) {
-                LOG("Waiting:%d tries\n", retry);
+                LOGD("Waiting:%d tries\n", retry);
             }
         } while (++retry < maxRetry);
 
@@ -551,14 +551,14 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         input = getInputBuffer();
         ret = feedInputDataToV4l2Buffer(input, eosReached, frameCounter);
         if (ret) {
-            LOG("Error: feed input data failed.\n");
+            LOGE("Error: feed input data failed.\n");
             return ret;
         }
         if (!isEndReached(eosReached, frameCounter)) {
             usleep(1 * 1000);
             ret = queueBuffer(input);
             if (ret) {
-                LOG("Error: queueBuffer input failed.\n");
+                LOGE("Error: queueBuffer input failed.\n");
                 return ret;
             }
         } else {
@@ -579,7 +579,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
             output = getOutputBufferLocked();
             ret = setOutputBufferData(output);
             if (ret) {
-                LOG("Error: failed to set output buffer data: %d\n", ret);
+                LOGE("Error: failed to set output buffer data: %d\n", ret);
                 return ret;
             }
             if (!isInputPortStarted()) {
@@ -587,7 +587,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
             }
             ret = queueBuffer(output);
             if (ret) {
-                LOG("Error: %s: output failed\n", __func__);
+                LOGE("Error: %s: output failed\n", __func__);
                 return ret;
             }
         }
@@ -632,7 +632,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         if (ret) {
             return ret;
         }
-        LOG("%s: %u frames queued.\n", __func__, frameCounter);
+        LOGD("%s: %u frames queued.\n", __func__, frameCounter);
         frameCounter++;
     }
 
@@ -687,12 +687,12 @@ int V4l2Encoder::writeDumpDataToFile(v4l2_buffer* buffer) {
                0);
 
     if (!map.isMapSucess()) {
-        LOG("Error: failed to mmap output buffer\n");
+        LOGE("Error: failed to mmap output buffer\n");
         return -EINVAL;
     }
     pBuffer = (std::uint8_t*)map.getMappedAddr();
 
-    LOG("Writing %d bytes to output, first 8 bytes: [%x %x %x %x %x %x %x "
+    LOGD("Writing %d bytes to output, first 8 bytes: [%x %x %x %x %x %x %x "
         "%x]\n",
         buffer->m.planes[0].bytesused, pBuffer[0], pBuffer[1], pBuffer[2],
         pBuffer[3], pBuffer[4], pBuffer[5], pBuffer[6], pBuffer[7]);
@@ -707,7 +707,7 @@ int V4l2Encoder::writeDumpDataToFile(v4l2_buffer* buffer) {
     sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_READ;
     ret = ioctl(buffer->m.planes[0].m.fd, DMA_BUF_IOCTL_SYNC, &sync);
     if (ret) {
-        LOG("debug: save encode DMA_BUF_SYNC_START failed with err = %d\n",
+        LOGD("Save encode DMA_BUF_SYNC_START failed with err = %d\n",
             ret);
     }
     fwrite(pBuffer, buffer->m.planes[0].bytesused, 1, mOutputDumpFile);
@@ -715,7 +715,7 @@ int V4l2Encoder::writeDumpDataToFile(v4l2_buffer* buffer) {
     sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_READ;
     ret = ioctl(buffer->m.planes[0].m.fd, DMA_BUF_IOCTL_SYNC, &sync);
     if (ret) {
-        LOG("debug: save encode DMA_BUF_SYNC_END failed with err = %d\n", ret);
+        LOGD("Save encode DMA_BUF_SYNC_END failed with err = %d\n", ret);
     }
 
     return 0;
@@ -759,7 +759,7 @@ int V4l2EncoderCB::onBufferDone(v4l2_buffer* buffer) {
             return ret;
         }
     } else if (buffer->type == OUTPUT_MPLANE) {
-        LOG("DQBUF DONE(Output): %d, bytesused: %d\n", buffer->index,
+        LOGD("DQBUF DONE(Output): %d, bytesused: %d\n", buffer->index,
             buffer->m.planes[0].bytesused);
         ret = putOutputBufferLocked(buffer);
         if (ret) {
@@ -771,7 +771,7 @@ int V4l2EncoderCB::onBufferDone(v4l2_buffer* buffer) {
         if (buffer->flags & V4L2_BUF_FLAG_LAST) {
             buffer->flags &= ~V4L2_BUF_FLAG_LAST;
             if (mEnc->isDrainSent()) {
-                LOG("onBufferDone: drain last flag received\n");
+                LOGW("onBufferDone: drain last flag received\n");
                 mEnc->setDrainLastFlagReceived(true);
             }
         }
@@ -781,7 +781,7 @@ int V4l2EncoderCB::onBufferDone(v4l2_buffer* buffer) {
 }
 
 int V4l2EncoderCB::onError(int error) {
-    LOG("onError called\n");
+    LOGV("onError called\n");
     mEnc->mErrorReceived = true;
     return 0;
 }

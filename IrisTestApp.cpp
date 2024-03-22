@@ -27,7 +27,9 @@
 #define SUCCESS 0
 #define BACKTRACE_SIZE 1024
 
-#define TEST_APP_VERSION 1.5
+#define TEST_APP_VERSION 1.6
+
+uint32_t gLogLevel = 0x7;
 
 std::unordered_map<std::string, std::string> gCodecMap = {
     {"AVC", "VIDEO_CodingAVC"},
@@ -328,10 +330,9 @@ void runAndWaitForComplete(
 static void showUsage() {
     printf("iris_v4l2_test [V4L Video Test app] \n");
     printf("Usage : iris_v4l2_test [OPTIONS] CONFIG.json\n");
-    printf("[OPTIONS] : --help    : -h : No Argument Required : Display the options\n");
-    printf("[OPTIONS] : --decoder : -d : No Argument Required : Specify encoder testcase\n");
-    printf("[OPTIONS] : --encoder : -e : No Argument Required : Specify decoder testcase\n");
-    printf("[OPTIONS] : --config  : -c : Argument Required    : Absolute path of config file\n");
+    printf("[OPTIONS] : --help       : No Argument Required         : Display the options\n");
+    printf("[OPTIONS] : --config     : Argument Required            : Absolute path of config file\n");
+    printf("[OPTIONS] : --loglevel   : Optional Argument Required   : Absolute path of config file\n");
 }
 
 int main(int argc, char** argv) {
@@ -343,14 +344,13 @@ int main(int argc, char** argv) {
     while (1) {
         int optIndex = 0;
         static struct option longOpts[] = {
-            {"help",     no_argument,       0,  'h' },
-            {"config",   required_argument, 0,  'c' },
-            {"decoder",  no_argument,       0,  'd' },
-            {"encoder",  no_argument,       0,  'e' },
-            {0,          0,                 0,   0  }
+            {"help",        no_argument,       0,  'h' },
+            {"config",      required_argument, 0,  'c' },
+            {"loglevel",    optional_argument, 0,  'l' },
+            {0,             0,                 0,   0  }
         };
 
-        int opt = getopt_long(argc, argv, "h:c:d:e:",
+        int opt = getopt_long(argc, argv, "h:c:l:",
                 longOpts, &optIndex);
 
         if (opt == -1) {
@@ -365,9 +365,9 @@ int main(int argc, char** argv) {
                 configPath = optarg;
                 printf("Config path: %s\n", configPath.c_str());
                 break;
-            case 'd':
-            case 'e':
-                printf("V4L %s Testcase\n", opt == 'd' ? "Decoder" : "Encoder");
+            case 'l':
+                gLogLevel = atoi(argv[optind++]);
+                printf("Log Level : 0x%x\n", gLogLevel);
                 break;
             default:
                 printf("Error: invalid option. Run \"./iris_v4l2_test --help\" for more info.\n");

@@ -235,7 +235,7 @@ int V4l2Codec::setStaticControls() {
     while (!mStaticControls.empty()) {
         auto ctrl = mStaticControls.front();
 
-        LOG("%s: id: %#x, value: %d\n", __FUNCTION__, ctrl->id, ctrl->value);
+        LOGI("%s: id: %#x, value: %d\n", __FUNCTION__, ctrl->id, ctrl->value);
 
         ret = setControl(ctrl->id, ctrl->value);
         if (ret) {
@@ -259,7 +259,7 @@ int V4l2Codec::setDynamicCommands(unsigned int currFrame) {
             itr++;
             continue;
         }
-        LOG("%s: id: %s, value: %s fnum: %u\n", __FUNCTION__, cmd->id.c_str(),
+        LOGI("%s: id: %s, value: %s fnum: %u\n", __FUNCTION__, cmd->id.c_str(),
             cmd->value.c_str(), cmd->fnum);
 
         if (cmd->id.compare("PauseUSec") == 0) {
@@ -289,7 +289,7 @@ int V4l2Codec::setDynamicControls(unsigned int currFrame) {
             itr++;
             continue;
         }
-        LOG("%s: id: %#x, value: %d fnum: %d\n", __FUNCTION__, ctrl->id,
+        LOGI("%s: id: %#x, value: %d fnum: %d\n", __FUNCTION__, ctrl->id,
             ctrl->value, ctrl->fnum);
 
         ret = setControl(ctrl->id, ctrl->value);
@@ -355,7 +355,7 @@ int V4l2Codec::populateStaticConfigs(
         auto ctrl = eventConfig.front();
         auto sControl = std::make_shared<StaticV4L2CtrlInfo>();
 
-        LOG("%s: %s %s %d %d %s\n", __func__, ctrl->Id.c_str(),
+        LOGV("%s: %s %s %d %d %s\n", __func__, ctrl->Id.c_str(),
             ctrl->valueStr.c_str(), ctrl->valueInt, ctrl->fnum,
             ctrl->Id.c_str());
 
@@ -411,7 +411,7 @@ int V4l2Codec::populateDynamicConfigs(
         auto ctrl = eventConfig.front();
         auto dControl = std::make_shared<DynamicV4L2CtrlInfo>();
 
-        LOG("%s: %s %s %d %d %s\n", __func__, ctrl->Id.c_str(),
+        LOGV("%s: %s %s %d %d %s\n", __func__, ctrl->Id.c_str(),
             ctrl->valueStr.c_str(), ctrl->valueInt, ctrl->fnum,
             ctrl->Id.c_str());
 
@@ -434,7 +434,7 @@ int V4l2Codec::populateDynamicCommands(
 
         auto dynCmdInfo = std::make_shared<DynamicCommandInfo>();
 
-        LOG("%s: %s %s %d %d %s\n", __func__, dynCmd->Id.c_str(),
+        LOGV("%s: %s %s %d %d %s\n", __func__, dynCmd->Id.c_str(),
             dynCmd->valueStr.c_str(), dynCmd->valueInt, dynCmd->fnum,
             dynCmd->Id.c_str());
 
@@ -463,19 +463,19 @@ int V4l2Codec::setControl(unsigned int ctrlId, int value) {
 }
 
 int V4l2Codec::setInputSizeOverWrite(int size) {
-    LOG("Client Input Size OverWrite %d\n", size);
+    LOGW("Client Input Size OverWrite %d\n", size);
     mInputSizeOverWrite = size;
     return 0;
 }
 
 int V4l2Codec::setInputActualCount(int count) {
-    LOG("Client set input actual count %d\n", count);
+    LOGW("Client set input actual count %d\n", count);
     mActualInputCount = count;
     return 0;
 }
 
 int V4l2Codec::setOutputActualCount(int count) {
-    LOG("Client set output actual count %d\n", count);
+    LOGW("Client set output actual count %d\n", count);
     mActualOutputCount = count;
     return 0;
 }
@@ -546,29 +546,26 @@ int V4l2Codec::stopOutput() {
 int V4l2Codec::setOutputBufferData(std::shared_ptr<v4l2_buffer> buf) {
     auto itr = mOutputDMABuffersPool.find(buf->index);
     if (itr == mOutputDMABuffersPool.end()) {
-        LOG("Error: no DMA buffer found for buffer index: %d\n", buf->index);
+        LOGE("Error: no DMA buffer found for buffer index: %d\n", buf->index);
         return -EINVAL;
     }
     auto& dmaBuf = (*itr).second;
-    // LOG("%d Mapped input buffer\n", buf->index);
     buf->m.planes[0].bytesused = getOutputSize();
     buf->m.planes[0].data_offset = 0;
     buf->m.planes[0].length = getOutputSize();
     buf->m.planes[0].m.fd = dmaBuf->mFd;
-    // LOG("Prepare output buffer %d with size: %d, fd: %d\n", buf->index,
-    // getOutputSize(), buf->m.planes[0].m.fd);
     return 0;
 }
 
 int V4l2Codec::setDump(std::string inputFile, std::string outputFile) {
     mInputDumpFile = fopen(inputFile.c_str(), "w+b");
     if (!mInputDumpFile) {
-        LOG("Error: failed to open input dump file.\n");
+        LOGE("Error: failed to open input dump file.\n");
     }
 
     mOutputDumpFile = fopen(outputFile.c_str(), "w+b");
     if (!mOutputDumpFile) {
-        LOG("Error: failed to open output file.\n");
+        LOGE("Error: failed to open output file.\n");
     }
     return 0;
 }
@@ -676,8 +673,6 @@ std::shared_ptr<v4l2_buffer> V4l2Codec::allocateBuffer(int index, port_type port
         mOutputDMABuffersPool[index] = dmaBuf;
     }
 
-    // LOG("Allocated %s buffer %d\n", (port == INPUT_PORT ? "input" :
-    // "output"), index);
     return buf;
 }
 

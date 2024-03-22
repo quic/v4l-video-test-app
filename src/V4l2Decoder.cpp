@@ -98,7 +98,7 @@ void V4l2Decoder::deinit() {
 }
 
 int V4l2Decoder::configureInput() {
-    LOG("V4l2Decoder::configureInput().\n");
+    LOGD("V4l2Decoder::configureInput().\n");
     struct v4l2_format fmt;
     struct v4l2_requestbuffers reqBufs;
     struct v4l2_control ctrl;
@@ -120,7 +120,7 @@ int V4l2Decoder::configureInput() {
 
     mStride = fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
     mInputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
-    LOG("configureInput: width(%d),height(%d),stride(%d),inputSize(%d)\n",
+    LOGD("configureInput: width(%d),height(%d),stride(%d),inputSize(%d)\n",
         mWidth, mHeight, mStride, mInputSize);
 
 #if 0
@@ -133,12 +133,12 @@ int V4l2Decoder::configureInput() {
 #endif
 
     if (mActualInputCount < mMinInputCount) {
-        LOG("update input count from %d to %d\n", mActualInputCount,
+        LOGD("update input count from %d to %d\n", mActualInputCount,
             mMinInputCount);
         mActualInputCount = mMinInputCount;
     }
 
-    LOG("configureInput: MinInputCount(%d),ActualInputCount(%d)\n",
+    LOGD("configureInput: MinInputCount(%d),ActualInputCount(%d)\n",
         mMinInputCount, mActualInputCount);
     memset(&reqBufs, 0, sizeof(reqBufs));
     reqBufs.type = INPUT_MPLANE;
@@ -149,7 +149,7 @@ int V4l2Decoder::configureInput() {
         return ret;
     }
     mActualInputCount = reqBufs.count;
-    LOG("configureInput: %d input buffers got from reqBufs\n",
+    LOGI("configureInput: %d input buffers got from reqBufs\n",
         mActualInputCount);
 
     return 0;
@@ -163,7 +163,7 @@ int V4l2Decoder::configureOutput() {
     struct v4l2_queryctrl queryctrl;
     struct v4l2_selection sel;
     int ret = 0;
-    LOG("V4l2Decoder::configureOutput()\n");
+    LOGD("V4l2Decoder::configureOutput()\n");
 
     /* set output format */
     memset(&fmt, 0, sizeof(fmt));
@@ -180,10 +180,10 @@ int V4l2Decoder::configureOutput() {
     auto mOutputVideoRange = fmt.fmt.pix_mp.quantization;
     auto mOutputColorPrimaries = fmt.fmt.pix_mp.colorspace;
 
-    LOG("%s: O/P buffer getFmt: MatrixCoeff[%d] TransferChar[%d]",
+    LOGD("%s: O/P buffer getFmt: MatrixCoeff[%d] TransferChar[%d]",
             __func__, mOutputMatrixCoeff, mOutputTransferChar);
 
-    LOG("%s: O/P buffer getFmt: VideoRange[%d] ColorPrimaries[%d]",
+    LOGD("%s: O/P buffer getFmt: VideoRange[%d] ColorPrimaries[%d]",
             __func__, mOutputVideoRange, mOutputColorPrimaries);
 
     ret = mV4l2Driver->setFormat(&fmt);
@@ -194,7 +194,7 @@ int V4l2Decoder::configureOutput() {
     mOBufHeight = fmt.fmt.pix_mp.height;
     mStride = fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
     mOutputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
-    LOG("%s: output Buffer(%dx%d), Stride(%d), OutputSize (%d)\n", __func__,
+    LOGD("%s: output Buffer(%dx%d), Stride(%d), OutputSize (%d)\n", __func__,
         mOBufWidth, mOBufHeight, mStride, mOutputSize);
 
     /* query driver recommended framesizes */
@@ -216,7 +216,7 @@ int V4l2Decoder::configureOutput() {
 #endif
 
     if (mActualOutputCount < mMinOutputCount) {
-        LOG("update output count from %d to %d\n", mActualOutputCount,
+        LOGD("update output count from %d to %d\n", mActualOutputCount,
             mMinOutputCount);
         mActualOutputCount = mMinOutputCount;
     }
@@ -230,7 +230,7 @@ int V4l2Decoder::configureOutput() {
         return ret;
     }
     mActualOutputCount = reqBufs.count;
-    LOG("%s: %d input buffers got from reqBufs\n", __func__,
+    LOGI("%s: %d input buffers got from reqBufs\n", __func__,
         mActualOutputCount);
 
     return 0;
@@ -273,7 +273,7 @@ bool V4l2Decoder::detectBitDepthChange() {
         }
     }
     if (!found) {
-        LOG("client colorformat %#x not supported\n", mPixelFmt);
+        LOGW("client colorformat %#x not supported\n", mPixelFmt);
     }
 
     return true;
@@ -293,7 +293,7 @@ int V4l2Decoder::detectResolutionChange(bool* hasResolutionChanged) {
     width = fmt.fmt.pix_mp.width;
     height = fmt.fmt.pix_mp.height;
     if (mWidth != width || mHeight != height) {
-        LOG("%s: Update bitstream resolution to wxh %dx%d from %dx%d\n",
+        LOGI("%s: Update bitstream resolution to wxh %dx%d from %dx%d\n",
             __func__, width, height, mWidth, mHeight);
         mWidth = width;
         mHeight = height;
@@ -334,9 +334,9 @@ int V4l2Decoder::reconfigureOutput() {
         return ret;
     }
 
-    LOG("reconfigureOutput: curent min cnt %d, latest min cnt %d\n",
+    LOGI("reconfigureOutput: curent min cnt %d, latest min cnt %d\n",
         mMinOutputCount, latestOutputMinCount);
-    LOG("reconfigureOutput: current o/p buffersize %d, latest output size %d, "
+    LOGI("reconfigureOutput: current o/p buffersize %d, latest output size %d, "
         "\n",
         mOutputSize, latestOutputSize);
 
@@ -373,14 +373,14 @@ int V4l2Decoder::feedInputDataToV4l2Buffer(std::shared_ptr<v4l2_buffer> buf,
                                            bool& eos, uint32_t frameCount) {
     auto itr = mInputDMABuffersPool.find(buf->index);
     if (itr == mInputDMABuffersPool.end()) {
-        LOG("Error: no DMA buffer found for buffer index: %d\n", buf->index);
+        LOGE("Error: no DMA buffer found for buffer index: %d\n", buf->index);
         return -EINVAL;
     }
     auto& dmaBuf = (*itr).second;
 
     MapBuf map(NULL, dmaBuf->mSize, PROT_READ | PROT_WRITE, MAP_SHARED, dmaBuf->mFd, 0);
     if (!map.isMapSucess()) {
-        LOG("Error: failed to mmap output buffer\n");
+        LOGE("Error: failed to mmap output buffer\n");
         return -EINVAL;
     }
     void* bufAddr = map.getMappedAddr();
@@ -447,17 +447,17 @@ int V4l2Decoder::resume() {
 int V4l2Decoder::handleSeek(int seekTo) {
     int ret = stopInput();
     if (ret) {
-        LOG("Error: handle_seek stopInput failed\n");
+        LOGE("Error: handle_seek stopInput failed\n");
         return ret;
     }
     ret = startInput();
     if (ret) {
-        LOG("Error: handle_seek startInput failed\n");
+        LOGE("Error: handle_seek startInput failed\n");
         return ret;
     }
     ret = seekToFrame(seekTo);
     if (ret) {
-        LOG("Error: handle_seek StreamParser seekto failed\n");
+        LOGE("Error: handle_seek StreamParser seekto failed\n");
         return ret;
     }
     return 0;
@@ -466,16 +466,16 @@ int V4l2Decoder::handleSeek(int seekTo) {
 int V4l2Decoder::handleRandomSeek(int& seekPos) {
     int ret = stopInput();
     if (ret) {
-        LOG("Error: handle_seek stopInput failed\n");
+        LOGE("Error: handle_seek stopInput failed\n");
         return ret;
     }
     ret = startInput();
     if (ret) {
-        LOG("Error: handle_seek startInput failed\n");
+        LOGE("Error: handle_seek startInput failed\n");
         return ret;
     }
     seekPos = randomSeek();
-    LOG("Random seek to %d\n", seekPos);
+    LOGE("Random seek to %d\n", seekPos);
 
     return 0;
 }
@@ -492,10 +492,10 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
 
     auto handleDrainEvent = [&]() -> int {
         int ret = 0;
-        LOG("queueBuffers: draining pending\n");
+        LOGW("queueBuffers: draining pending\n");
         ret = stop();
         if (ret) {
-            LOG("Error: queueBuffers: draining failed\n");
+            LOGE("Error: queueBuffers: draining failed\n");
             return ret;
         }
         return ret;
@@ -511,7 +511,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             }
             usleep(sleepMs * 1000);
             if ((retry % midtry) == 0) {
-                LOG("Waiting:%d tries\n", retry);
+                LOGD("Waiting:%d tries\n", retry);
             }
         } while (++retry < maxRetry);
 
@@ -567,7 +567,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             usleep(1 * 1000);
             ret = queueBuffer(output);
             if (ret) {
-                LOG("Error: %s: output failed\n", __func__);
+                LOGE("Error: %s: output failed\n", __func__);
                 return ret;
             }
         }
@@ -580,7 +580,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         input = getInputBuffer();
         ret = feedInputDataToV4l2Buffer(input, eosReached, frameCounter);
         if (ret) {
-            LOG("Error: feed input data failed.\n");
+            LOGE("Error: feed input data failed.\n");
             return ret;
         }
         if (!isEndReached(eosReached, frameCounter)) {
@@ -589,7 +589,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             }
             ret = queueBuffer(input);
             if (ret) {
-                LOG("Error: queueBuffer input failed.\n");
+                LOGE("Error: queueBuffer input failed.\n");
                 return ret;
             }
         } else {
@@ -601,7 +601,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
                     return ret;
                 }
             } else {
-                LOG("%s: postpone drain. output not started\n", __func__);
+                LOGW("%s: postpone drain. output not started\n", __func__);
                 setDrainPending(true);
             }
         }
@@ -610,7 +610,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
     auto handleReconfigEvent = [&]() -> int {
         int ret = 0;
         if (!isOutputPortStarted()) {
-            LOG("%s: 1st src change event arrived. start output\n", __func__);
+            LOGW("%s: 1st src change event arrived. start output\n", __func__);
             setReconfigEventReceived(false);
             ret = configureAndStartOutput();
             if (ret) {
@@ -621,10 +621,10 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             setDrcLastFlagReceived(false);
             ret = reconfigureOutput();
             if (ret) {
-                LOG("Error: queueBuffers: reconfigureOutput failed.\n");
+                LOGE("Error: queueBuffers: reconfigureOutput failed.\n");
                 return ret;
             }
-            LOG("%s: last flag for reconfig arrived\n", __func__);
+            LOGW("%s: last flag for reconfig arrived\n", __func__);
         }
         return ret;
     };
@@ -632,10 +632,10 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         int ret = 0;
         setDrainLastFlagReceived(false);
         setDrainSent(false);
-        LOG("queueBuffers: last flag for drain arrived\n");
+        LOGW("queueBuffers: last flag for drain arrived\n");
         ret = start();
         if (ret != 0) {
-            LOG("Error: queueBuffers: resume failed.\n");
+            LOGE("Error: queueBuffers: resume failed.\n");
             return ret;
         }
         return ret;
@@ -651,7 +651,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         }
         ret = handleRandomSeek(randomSeekTo);
         if (ret < 0) {
-            LOG("Error: failed to handle random seek. Exit.");
+            LOGE("Error: failed to handle random seek. Exit.");
             return ret;
         }
         frameCounter = randomSeekTo;
@@ -685,7 +685,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         handleSeek(seekTo);
         frameCounter = seekTo;
 
-        LOG("queueBuffers: seek from %d to %d completed.\n", seekFrom, seekTo);
+        LOGW("queueBuffers: seek from %d to %d completed.\n", seekFrom, seekTo);
 
         if (mIDRSeek.size()) {
             mIDRSeek.erase(mIDRSeek.begin());
@@ -696,7 +696,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             seekTo = -1;
         }
 
-        LOG("queueBuffers: UPDATED: will seek from %d to %d.\n", seekFrom,
+        LOGW("queueBuffers: UPDATED: will seek from %d to %d.\n", seekFrom,
             seekTo);
         return 0;
     };
@@ -764,7 +764,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             return ret;
         }
 
-        LOG("frame count: %d\n", frameCounter);
+        LOGI("frame count: %d\n", frameCounter);
         frameCounter++;
     }
 
@@ -785,7 +785,7 @@ int V4l2Decoder::writeDumpDataToFile(v4l2_buffer* buffer) {
     MapBuf map(NULL, buffer->m.planes[0].length, PROT_READ, MAP_SHARED, buffer->m.planes[0].m.fd,
                0);
     if (!map.isMapSucess()) {
-        LOG("Error: failed to mmap output buffer\n");
+        LOGE("Error: failed to mmap output buffer\n");
         return -EINVAL;
     }
     pBuffer = (std::uint8_t*)map.getMappedAddr();
@@ -794,7 +794,7 @@ int V4l2Decoder::writeDumpDataToFile(v4l2_buffer* buffer) {
     switch (getColorFormat()) {
         case V4L2_PIX_FMT_NV12: {
             uint8_t* base = pBuffer;
-            LOG("Dump file as NV12, frame size(%dx%d), buffer size(%dx%d).\n",
+            LOGE("Dump file as NV12, frame size(%dx%d), buffer size(%dx%d).\n",
                 frameWidth, frameHeight, oBufWidth, oBufHeight);
             if (frameWidth == oBufWidth) {
                 // Y Plane
@@ -817,7 +817,7 @@ int V4l2Decoder::writeDumpDataToFile(v4l2_buffer* buffer) {
             break;
         }
         default: {
-            LOG("unsupport this color format: %x\n", getColorFormat());
+            LOGW("unsupport this color format: %x\n", getColorFormat());
             fwrite(pBuffer, buffer->m.planes[0].bytesused, 1, mOutputDumpFile);
             break;
         }
@@ -868,7 +868,7 @@ int V4l2DecoderCB::onBufferDone(v4l2_buffer* buffer) {
             return ret;
         }
     } else if (buffer->type == OUTPUT_MPLANE) {
-        LOG("%s: DQBUF DONE(output): %d, bytesused: %d\n", __func__,
+        LOGI("%s: DQBUF DONE(output): %d, bytesused: %d\n", __func__,
             buffer->index, buffer->m.planes[0].bytesused);
         ret = putOutputBufferLocked(buffer);
         if (ret) {
@@ -883,12 +883,12 @@ int V4l2DecoderCB::onBufferDone(v4l2_buffer* buffer) {
             buffer->flags &= ~V4L2_BUF_FLAG_LAST;
 
             if (mDec->isReconfigEventReceived()) {
-                LOG("onBufferDone: Drc last flag received\n");
+                LOGW("onBufferDone: Drc last flag received\n");
                 mDec->setDrcLastFlagReceived(true);
             }
 
             if (mDec->isDrainSent()) {
-                LOG("onBufferDone: drain last flag received\n");
+                LOGW("onBufferDone: drain last flag received\n");
                 mDec->setDrainLastFlagReceived(true);
             }
         }
@@ -899,13 +899,13 @@ int V4l2DecoderCB::onBufferDone(v4l2_buffer* buffer) {
 
 int V4l2DecoderCB::onEventDone(v4l2_event* event) {
     std::unique_lock<std::mutex> lock(mDec->mBufLock);
-    LOG("V4l2DecoderCB::onEventDone()\n");
+    LOGV("V4l2DecoderCB::onEventDone()\n");
     if (event == nullptr) {
-        LOG("V4l2DecoderCB::onEventDone: error, null event!\n");
+        LOGE("V4l2DecoderCB::onEventDone: error, null event!\n");
         return -EINVAL;
     } else if (event->type == V4L2_EVENT_SOURCE_CHANGE &&
                event->u.src_change.changes == V4L2_EVENT_SRC_CH_RESOLUTION) {
-        LOG("onEventDone : source change event received\n");
+        LOGI("onEventDone : source change event received\n");
         mDec->setReconfigEventReceived(true);
         mDec->setFirstReconfigReceived(true);
     }
@@ -913,7 +913,7 @@ int V4l2DecoderCB::onEventDone(v4l2_event* event) {
 }
 
 int V4l2DecoderCB::onError(int error) {
-    LOG("onError called\n");
+    LOGV("onError called\n");
     mDec->mErrorReceived = true;
     return 0;
 }

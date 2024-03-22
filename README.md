@@ -127,6 +127,11 @@ Upload this executable file and data folder to the device *(using "adb push ..."
 # Command to run the Decoder testcase.
 ./iris_v4l2_test --config ./data/config/h264Decoder.json
 # ----------------------------------------------------------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Command to run the testcase with custom log level. Range: [0, 16]
+./iris_v4l2_test --loglevel 12 --config ./data/config/h264Decoder.json
+# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
 ## 3. Tags Table
