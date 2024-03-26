@@ -20,5 +20,5 @@ cd ../../
 rm -rf ./ffmpeg
 git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 cd ffmpeg
-./configure --enable-shared --enable-static --prefix=./output --cross-prefix=aarch64-linux-gnu- --arch=arm64 --target-os=linux --enable-ffmpeg
+./configure --enable-shared --enable-static --prefix=./output --cross-prefix=aarch64-linux-gnu- --arch=arm64 --target-os=linux --disable-programs --disable-doc --disable-avdevice --disable-swscale --disable-postproc --disable-avfilter --disable-encoders --disable-decoders --disable-muxers --disable-devices --disable-filters
 make && make install
