@@ -27,7 +27,7 @@
 #define SUCCESS 0
 #define BACKTRACE_SIZE 1024
 
-#define TEST_APP_VERSION 1.6
+#define TEST_APP_VERSION 1.7
 
 uint32_t gLogLevel = 0x7;
 

@@ -558,12 +558,37 @@ int V4l2Codec::setOutputBufferData(std::shared_ptr<v4l2_buffer> buf) {
 }
 
 int V4l2Codec::setDump(std::string inputFile, std::string outputFile) {
-    mInputDumpFile = fopen(inputFile.c_str(), "w+b");
+    static std::unordered_map<std::string, uint32_t> sNames;
+
+    auto genUniqueFileName = [&](std::string filename) -> std::string {
+        if (sNames[filename] != 0) {
+            if (access (filename.c_str(), F_OK) == -1 ) {
+                /*file does not exist. Reset cache;*/
+                sNames[filename] = 0;
+            }
+        }
+
+        /* append instance count to filename. */
+        std::string modified = filename;
+        if (sNames[filename] != 0) {
+            size_t extPos = filename.find_last_of('.');
+            if (extPos == std::string::npos) {
+                LOGE("Invalid file name. No extension specified");
+                return "";
+            }
+            modified.insert(extPos, std::to_string(sNames[filename])).insert(extPos, 1, '_');
+        }
+        sNames[filename]++;
+        return modified;
+    };
+
+
+    mInputDumpFile = fopen(genUniqueFileName(inputFile).c_str(), "wb");
     if (!mInputDumpFile) {
         LOGE("Error: failed to open input dump file.\n");
     }
 
-    mOutputDumpFile = fopen(outputFile.c_str(), "w+b");
+    mOutputDumpFile = fopen(genUniqueFileName(outputFile).c_str(), "wb");
     if (!mOutputDumpFile) {
         LOGE("Error: failed to open output file.\n");
     }
