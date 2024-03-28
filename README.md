@@ -28,45 +28,42 @@ sudo apt-get -y install cmake
 
 #### 2.1.3. Follow the below commands to setup your compiler
 
+##### Copy the compressed compiler in /local/ in your machine. Unzip the compiler in /local/
 ```bash
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Copy the compressed compiler in /local/ in your machine. Unzip the compiler in /local/
 cd /local/
 tar -xvf ./gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Create toolchain directory
+##### Create toolchain directory
+```bash
 sudo mkdir -p /usr/aarch64-linux-gnu
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Copy toolchain files to dst directory
+##### Copy toolchain files to dst directory
+```bash
 cd gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu
 sudo cp -r ./* /usr/aarch64-linux-gnu
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Add paths for the environment
+##### Add paths for the environment
+```bash
 export ARCH=arm64
 export PATH="$PATH:/usr/aarch64-linux-gnu/bin"
 export PATH="$PATH:/pkg/asw/compilers/gnu/linaro-toolchain/5.1/bin/"
 export CROSS_COMPILE=/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------------------------------------------------------------------------
-# To check if the compiler is properly set use the below commands
+##### To check if the compiler is properly set use the below commands
+```bash
 aarch64-none-linux-gnu-gcc -v
 aarch64-none-linux-gnu-g++ -v
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Setup the include file for linux headers
+##### Setup the include file for linux headers
+```bash
 cd /usr/aarch64-linux-gnu/aarch64-none-linux-gnu/libc/usr/include
 sudo mv linux linux_bak
 sudo ln -s /usr/include/linux ./linux
-# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
 ### 2.2 Install and compile the dependent projects
@@ -76,13 +73,11 @@ Run the script [**prepare_3p_module.sh**](https://github.com/quic/v4l-video-test
 ##### **NOTE: The install location of output headers & libs can be modified in this script. Update the top-level [**CMakeLists.txt**](https://github.com/quic/v4l-video-test-app/blob/master/CMakeLists.txt) to make sure that they can be found.
 
 #### 2.2.1. Follow the below commands to compile the third party dependencies
+##### Give prepare_3p_module.sh executable rights and run the scripts
 ```bash
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Give prepare_3p_module.sh executable rights and run the scripts
 cd v4l-video-test-app/third-parties
 chmod +x prepare_3p_module.sh
 ./prepare_3p_module.sh
-# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
 ### 2.3. Build & Test The Project
@@ -92,46 +87,39 @@ Once the environment is set and dependent projects are install we are ready for 
 Run script [**build.sh**](https://github.com/quic/v4l-video-test-app/blob/master/build.sh) to build the project. This would build the project into an executable file **"iris_v4l2_test"** in "v4l_video_test_app/build" folder.
 
 #### 2.3.1. Follow the below commands to compile the executable
-
+##### Give build.sh executable rights and run the scripts
 ```bash
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Give build.sh executable rights and run the scripts
 cd v4l-video-test-app/
 chmod +x build.sh
 ./build.sh
-# ----------------------------------------------------------------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Give newly created binary iris_v4l2_test executable rights
+```
+##### Give newly created binary iris_v4l2_test executable rights
+```bash
 cd build/
 chmod +x iris_v4l2_test
-# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
-Upload this executable file and data folder to the device *(using "adb push ..." or some other methods according to your device and platform)*.
+##### Upload this executable file and data folder to the device *(using "adb push ..." or some other methods according to your device and platform)*.
 
 #### 2.3.2. Follow the below commands to run the tests
 
+##### This commands helps in understanding the requirement and options for running the test
 ```bash
-# ----------------------------------------------------------------------------------------------------------------------------------
-# This commands helps in understanding the requirement and options for running the test
 ./iris_v4l2_test --help
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Command to run the Encoder testcase.
+##### Command to run the Encoder testcase.
+```bash
 ./iris_v4l2_test --config ./data/config/h264Encoder.json
-# ----------------------------------------------------------------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Command to run the Decoder testcase.
+```
+##### Command to run the Decoder testcase.
+```bash
 ./iris_v4l2_test --config ./data/config/h264Decoder.json
-# ----------------------------------------------------------------------------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------------------------------------------------------------------------
-# Command to run the testcase with custom log level. Range: [0, 16]
+##### Command to run the testcase with custom log level. Range: [0, 16]
+```bash
 ./iris_v4l2_test --loglevel 12 --config ./data/config/h264Decoder.json
-# ----------------------------------------------------------------------------------------------------------------------------------
 ```
 
 ## 3. Tags Table
