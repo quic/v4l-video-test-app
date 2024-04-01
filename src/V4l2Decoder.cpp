@@ -180,10 +180,10 @@ int V4l2Decoder::configureOutput() {
     auto mOutputVideoRange = fmt.fmt.pix_mp.quantization;
     auto mOutputColorPrimaries = fmt.fmt.pix_mp.colorspace;
 
-    LOGD("%s: O/P buffer getFmt: MatrixCoeff[%d] TransferChar[%d]",
+    LOGD("%s: O/P buffer getFmt: MatrixCoeff[%d] TransferChar[%d]\n",
             __func__, mOutputMatrixCoeff, mOutputTransferChar);
 
-    LOGD("%s: O/P buffer getFmt: VideoRange[%d] ColorPrimaries[%d]",
+    LOGD("%s: O/P buffer getFmt: VideoRange[%d] ColorPrimaries[%d]\n",
             __func__, mOutputVideoRange, mOutputColorPrimaries);
 
     ret = mV4l2Driver->setFormat(&fmt);
@@ -230,7 +230,7 @@ int V4l2Decoder::configureOutput() {
         return ret;
     }
     mActualOutputCount = reqBufs.count;
-    LOGI("%s: %d input buffers got from reqBufs\n", __func__,
+    LOGI("%s: %d output buffers got from reqBufs\n", __func__,
         mActualOutputCount);
 
     return 0;
@@ -319,6 +319,7 @@ int V4l2Decoder::reconfigureOutput() {
     }
     latestOutputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
 
+#if 0
     memset(&ctrl, 0, sizeof(ctrl));
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
@@ -326,6 +327,7 @@ int V4l2Decoder::reconfigureOutput() {
         return ret;
     }
     latestOutputMinCount = ctrl.value;
+#endif
 
     isBitDepthChanged = detectBitDepthChange();
 
@@ -766,6 +768,8 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
 
         LOGI("frame count: %d\n", frameCounter);
         frameCounter++;
+
+        usleep(10 * 1000);
     }
 
     return ret;
