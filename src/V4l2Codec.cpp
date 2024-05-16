@@ -43,7 +43,6 @@ std::unordered_map<std::string, unsigned int> gV4l2KeyCIDMap = {
     {"HEVC_Tier",                    V4L2_CID_MPEG_VIDEO_HEVC_TIER},
     {"HEVC_Level",                   V4L2_CID_MPEG_VIDEO_HEVC_LEVEL},
     {"HEVC_Profile",                 V4L2_CID_MPEG_VIDEO_HEVC_PROFILE},
-    {"HEVC_LosslessCU",              V4L2_CID_MPEG_VIDEO_HEVC_LOSSLESS_CU},
     {"HEVC_MinQP",                   V4L2_CID_MPEG_VIDEO_HEVC_MIN_QP},
     {"HEVC_MaxQP",                   V4L2_CID_MPEG_VIDEO_HEVC_MAX_QP},
     {"HEVC_IQP",                     V4L2_CID_MPEG_VIDEO_HEVC_I_FRAME_QP},
@@ -66,7 +65,6 @@ std::unordered_map<std::string, unsigned int> gV4l2KeyCIDMap = {
     {"HEVC_HierCodingL6BR",          V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L6_BR,},
     {"HEVC_HierarchicalCodingType",  V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_TYPE},
     {"HEVC_HierarchicalLayerCount",  V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_LAYER},
-    {"HEVC_LFBetaOffset",            V4L2_CID_MPEG_VIDEO_HEVC_LF_BETA_OFFSET_DIV2},
 
     //Non-Codec Based
     {"VFlip",                        V4L2_CID_VFLIP},

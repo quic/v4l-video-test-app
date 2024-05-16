@@ -27,9 +27,9 @@
 #define SUCCESS 0
 #define BACKTRACE_SIZE 1024
 
-#define TEST_APP_VERSION 1.8
+#define TEST_APP_VERSION 1.9
 
-uint32_t gLogLevel = 0x7;
+uint32_t gLogLevel = 0xF;
 
 std::unordered_map<std::string, std::string> gCodecMap = {
     {"AVC", "VIDEO_CodingAVC"},

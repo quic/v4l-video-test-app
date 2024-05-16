@@ -103,6 +103,9 @@ const char* ctrl_name(int id) {
         case V4L2_CID_MPEG_VIDEO_BITRATE_MODE:
             name = "Bitrate Mode";
             break;
+        case V4L2_CID_MPEG_VIDEO_H264_HIERARCHICAL_CODING:
+            name = "H264 Hierarchical Coding";
+            break;
         case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_TYPE:
         case V4L2_CID_MPEG_VIDEO_H264_HIERARCHICAL_CODING_TYPE:
             name = "Hierarchical Coding Type";
@@ -115,7 +118,17 @@ const char* ctrl_name(int id) {
         case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L1_BR:
         case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L2_BR:
         case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L3_BR:
-            name = "Hierarchical Coding Bitrate";
+        case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L4_BR:
+        case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L5_BR:
+        case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L6_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L0_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L1_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L2_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L3_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L4_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L5_BR:
+        case V4L2_CID_MPEG_VIDEO_H264_HIER_CODING_L6_BR:
+            name = "Hierarchical Coding Bitrate Level";
             break;
         case V4L2_CID_ROTATE:
             name = "Rotate";
@@ -165,6 +178,17 @@ const char* ctrl_name(int id) {
             break;
         case V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME:
             name = "Force Key Frame";
+            break;
+        case V4L2_CID_MPEG_VIDEO_H264_MAX_QP:
+        case V4L2_CID_MPEG_VIDEO_HEVC_MAX_QP:
+            name = "Frame MAX QP";
+            break;
+        case V4L2_CID_MPEG_VIDEO_HEVC_MIN_QP:
+        case V4L2_CID_MPEG_VIDEO_H264_MIN_QP:
+            name = "Frame MIN QP";
+            break;
+        case V4L2_CID_MPEG_VIDEO_BASELAYER_PRIORITY_ID:
+            name = "Base Priority Id";
             break;
         default:
             break;
