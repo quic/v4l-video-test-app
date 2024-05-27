@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iostream>
 
+#include "V4l2Driver.h"
 #include "FFStreamParser.h"
 
 FFStreamParser::FFStreamParser(std::string inputPath, std::string sessionId)
@@ -88,6 +89,9 @@ int FFStreamParser::init() {
             break;
         case AV_CODEC_ID_VP9:
             mCodecFmt = V4L2_PIX_FMT_VP9;
+            break;
+        case AV_CODEC_ID_AV1:
+            mCodecFmt = V4L2_PIX_FMT_AV1;
             break;
         default:
             std::cerr << "[" << mSessionId << "]: Error: unsupported codec."

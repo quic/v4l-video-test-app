@@ -9,6 +9,8 @@
 #define _LOG_H_
 
 #include <stdio.h>
+#include <stdint.h>
+
 #include <iostream>
 
 extern uint32_t gLogLevel;
