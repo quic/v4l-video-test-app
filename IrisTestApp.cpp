@@ -31,16 +31,11 @@
 
 uint32_t gLogLevel = 0xF;
 
-std::unordered_map<std::string, std::string> gCodecMap = {
-    {"AVC", "VIDEO_CodingAVC"},
-    {"VP9", "VIDEO_CodingVP9"},
-    {"HEVC", "VIDEO_CodingHEVC"},
-};
-
 std::unordered_map<std::string, unsigned int> gCodecIDMap = {
     {"AVC", V4L2_PIX_FMT_H264},
     {"VP9", V4L2_PIX_FMT_VP9},
     {"HEVC", V4L2_PIX_FMT_HEVC},
+    {"AV1", V4L2_PIX_FMT_AV1},
 };
 
 std::unordered_map<std::string, unsigned int> gColorFormatIDMap = {
