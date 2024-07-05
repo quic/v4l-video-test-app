@@ -294,14 +294,12 @@ int V4l2Encoder::configureInput() {
         mCropHeight = mHeight;
     }
 
-#if 0
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_OUTPUT;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
         return ret;
     }
     mMinInputCount = ctrl.value;
-#endif
 
     if (mActualInputCount < mMinInputCount) {
         LOGV("update input count from %d to %d\n", mActualInputCount,
@@ -338,14 +336,12 @@ int V4l2Encoder::configureOutput() {
     }
     mOutputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
 
-#if 0
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
         return ret;
     }
     mMinOutputCount = ctrl.value;
-#endif
 
     if (mActualOutputCount < mMinOutputCount) {
         LOGV("update output count from %d to %d\n", mActualOutputCount,
