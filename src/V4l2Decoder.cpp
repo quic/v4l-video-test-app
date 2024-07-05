@@ -123,14 +123,12 @@ int V4l2Decoder::configureInput() {
     LOGD("configureInput: width(%d),height(%d),stride(%d),inputSize(%d)\n",
         mWidth, mHeight, mStride, mInputSize);
 
-#if 0
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_OUTPUT;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
         return ret;
     }
     mMinInputCount = ctrl.value;
-#endif
 
     if (mActualInputCount < mMinInputCount) {
         LOGD("update input count from %d to %d\n", mActualInputCount,
@@ -206,14 +204,12 @@ int V4l2Decoder::configureOutput() {
         return ret;
     }
 
-#if 0
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
         return ret;
     }
     mMinOutputCount = ctrl.value;
-#endif
 
     if (mActualOutputCount < mMinOutputCount) {
         LOGD("update output count from %d to %d\n", mActualOutputCount,
