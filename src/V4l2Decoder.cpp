@@ -498,7 +498,20 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         }
         return ret;
     };
-    auto isInputAvailable = [&]() -> bool { return !mInputBufs.empty(); };
+
+    auto isInputAvailable = [&]() -> bool {
+        std::unique_lock<std::mutex> lock(mBufLock);
+        return !mInputBufs.empty();
+    };
+
+    auto needWaitForInput = [&]() -> bool {
+        std::unique_lock<std::mutex> lock(mBufLock);
+        if (mPendingInputBufs.size() >= getMinInputCount()) {
+            return true;
+        }
+        return false;
+    };
+
     auto isOutputAvailable = [&]() -> bool { return !mOutputBufs.empty(); };
     auto waitForCondition = [&](int sleepMs, int maxRetry, auto condition) -> int {
         int retry = 0;
@@ -751,10 +764,12 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             break;
         }
 
-        ret = waitForCondition(100, 1000,
-                               [&]() -> bool { return isInputAvailable(); });
-        if (ret) {
-            return ret;
+        if (!isInputAvailable()) {
+            if (needWaitForInput()) {
+                usleep(10 * 1000);
+                continue;
+            }
+            return -ENOMEM;
         }
 
         ret = prepareAndQueueInputBuffer();
