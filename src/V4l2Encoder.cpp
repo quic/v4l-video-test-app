@@ -506,23 +506,22 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         }
         return ret;
     };
-    auto isInputAvailable = [&]() -> bool { return !mInputBufs.empty(); };
-    auto isOutputAvailable = [&]() -> bool { return !mOutputBufs.empty(); };
-    auto waitForCondition = [&](int sleepMs, int maxRetry, auto condition) -> int {
-        int retry = 0;
-        int midtry = maxRetry / 10 + 1;
-        do {
-            if (condition()) {
-                return 0;
-            }
-            usleep(sleepMs * 1000);
-            if ((retry % midtry) == 0) {
-                LOGD("Waiting:%d tries\n", retry);
-            }
-        } while (++retry < maxRetry);
 
-        return -EINVAL;
+    auto isInputAvailable = [&]() -> bool {
+        std::unique_lock<std::mutex> lock(mBufLock);
+        return !mInputBufs.empty();
     };
+
+    auto needWaitForInput = [&]() -> bool {
+        std::unique_lock<std::mutex> lock(mBufLock);
+        if (mPendingInputBufs.size() >= getMinInputCount()) {
+            return true;
+        }
+        return false;
+    };
+
+    auto isOutputAvailable = [&]() -> bool { return !mOutputBufs.empty(); };
+
     auto isEndReached = [&maxFrameCnt](bool eos, int frameNum) -> bool {
         return (eos || frameNum >= maxFrameCnt);
     };
@@ -620,10 +619,15 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         if (ret) {
             return ret;
         }
-        ret = waitForCondition(1000, 1000, [&]() -> bool { return isInputAvailable(); });
-        if (ret) {
-            return ret;
+
+        if (!isInputAvailable()) {
+            if (needWaitForInput()) {
+                usleep(10 * 1000);
+                continue;
+            }
+            return -ENOMEM;
         }
+
         ret = prepareAndQueueInputBuffer();
         if (ret) {
             return ret;
