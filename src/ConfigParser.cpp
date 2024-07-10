@@ -269,8 +269,7 @@ int parseJsonConfigs(
             return 0;
         }
 
-        Json::FastWriter writer;
-        std::string testCaseName = writer.write(testcase["Name"]);
+        std::string testCaseName = testcase["Name"].asString();
         mapTestCasesConfig[testCaseName] = config;
     }
 
