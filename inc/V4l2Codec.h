@@ -133,7 +133,8 @@ class V4l2Codec {
     int setDump(std::string inputFile, std::string outputFile);
 
   protected:
-    std::mutex mBufLock;
+    std::mutex mInputBufLock;
+    std::mutex mOutputBufLock;
     std::shared_ptr<V4l2Driver> mV4l2Driver;
 
     std::map<int, int> mIDRSeek, mRandomSeek;

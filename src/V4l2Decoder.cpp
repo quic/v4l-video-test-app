@@ -481,6 +481,7 @@ int V4l2Decoder::handleRandomSeek(int& seekPos) {
 int V4l2Decoder::queueBuffers(int maxFrameCnt) {
     int ret = 0;
     int frameCounter = 0;
+    int retry_count = 0;
     int seekFrom = mIDRSeek.size() == 0 ? -1 : mIDRSeek.begin()->first;
     int seekTo = mIDRSeek.size() == 0 ? -1 : mIDRSeek.begin()->second;
     int randomSeekFrom =
@@ -500,12 +501,12 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
     };
 
     auto isInputAvailable = [&]() -> bool {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         return !mInputBufs.empty();
     };
 
     auto needWaitForInput = [&]() -> bool {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         if (mPendingInputBufs.size() >= getMinInputCount()) {
             return true;
         }
@@ -545,7 +546,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         return 0;
     };
     auto getInputBuffer = [&]() -> std::shared_ptr<v4l2_buffer> {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         auto buf = mInputBufs.front();
         mInputBufs.pop_front();
         mPendingInputBufs.push_back(buf);
@@ -563,7 +564,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
     auto queueAvailableOutputBuffers = [&]() -> int {
         std::shared_ptr<v4l2_buffer> output = nullptr;
         int ret = 0;
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mOutputBufLock);
 
         if (mPendingOutputBufs.size() >= getMinOutputCount()) {
             return 0;
@@ -765,7 +766,13 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         }
 
         if (!isInputAvailable()) {
+            if (retry_count >= 100) {
+                LOGE("%s: wait for input buffer timeout(1s)\n", __func__);
+                return -ETIMEDOUT;
+            }
+            
             if (needWaitForInput()) {
+                retry_count++;
                 usleep(10 * 1000);
                 continue;
             }
@@ -779,8 +786,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
 
         LOGI("frame count: %d\n", frameCounter);
         frameCounter++;
-
-        usleep(10 * 1000);
+        retry_count = 0;
     }
 
     return ret;
@@ -845,9 +851,9 @@ V4l2DecoderCB::V4l2DecoderCB(V4l2Decoder* dec, std::string sessionId)
     : V4l2CodecCallback(sessionId), mDec(dec) {}
 
 int V4l2DecoderCB::onBufferDone(v4l2_buffer* buffer) {
-    std::unique_lock<std::mutex> lock(mDec->mBufLock);
     int ret = 0;
     auto putInputBufferLocked = [&](v4l2_buffer* buf) -> int {
+        std::unique_lock<std::mutex> lock(mDec->mInputBufLock);
         auto& inputBufs = mDec->mInputBufs;
         auto& pendingInputBufs = mDec->mPendingInputBufs;
 
@@ -862,6 +868,7 @@ int V4l2DecoderCB::onBufferDone(v4l2_buffer* buffer) {
         return 0;
     };
     auto putOutputBufferLocked = [&](v4l2_buffer* buf) -> int {
+        std::unique_lock<std::mutex> lock(mDec->mOutputBufLock);
         auto& outputBufs = mDec->mOutputBufs;
         auto& pendingOutputBufs = mDec->mPendingOutputBufs;
 
@@ -913,7 +920,6 @@ int V4l2DecoderCB::onBufferDone(v4l2_buffer* buffer) {
 }
 
 int V4l2DecoderCB::onEventDone(v4l2_event* event) {
-    std::unique_lock<std::mutex> lock(mDec->mBufLock);
     LOGV("V4l2DecoderCB::onEventDone()\n");
     if (event == nullptr) {
         LOGE("V4l2DecoderCB::onEventDone: error, null event!\n");

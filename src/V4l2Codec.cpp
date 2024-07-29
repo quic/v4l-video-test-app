@@ -510,7 +510,7 @@ int V4l2Codec::stopInput() {
         return ret;
     }
     {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         while (!mPendingInputBufs.empty()) {
             auto buf = mPendingInputBufs.front();
             mInputBufs.push_back(buf);
@@ -530,7 +530,7 @@ int V4l2Codec::stopOutput() {
     }
 
     {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mOutputBufLock);
         while (!mPendingOutputBufs.empty()) {
             auto buf = mPendingOutputBufs.front();
             mOutputBufs.push_back(buf);
@@ -619,10 +619,11 @@ int V4l2Codec::allocateBuffers(port_type port) {
             return -EINVAL;
         }
         {
-            std::unique_lock<std::mutex> lock(mBufLock);
             if (port == INPUT_PORT) {
+                std::unique_lock<std::mutex> lock(mInputBufLock);
                 mInputBufs.push_back(buf);
             } else {
+                std::unique_lock<std::mutex> lock(mOutputBufLock);
                 mOutputBufs.push_back(buf);
             }
         }
@@ -638,8 +639,7 @@ void V4l2Codec::freeBuffers(port_type port) {
     auto& bufPool =
         port == OUTPUT_PORT ? mOutputDMABuffersPool : mInputDMABuffersPool;
 
-    {
-        std::unique_lock<std::mutex> lock(mBufLock);
+    auto handleBufferFree = [&]() {
         while (!bufs.empty()) {
             auto buf = bufs.front();
             if (buf->m.planes) {
@@ -657,6 +657,16 @@ void V4l2Codec::freeBuffers(port_type port) {
             pendingBuf.pop_front();
         }
         bufPool.clear();
+    };
+
+    if (port == OUTPUT_PORT) {
+        std::unique_lock<std::mutex> lock(mOutputBufLock);
+        LOGD("Freeing %d + %d output buffers\n", bufs.size(), pendingBuf.size());
+        handleBufferFree();
+    } else {
+        std::unique_lock<std::mutex> lock(mInputBufLock);
+        LOGD("Freeing %d + %d input buffers\n", bufs.size(), pendingBuf.size());
+        handleBufferFree(); 
     }
 }
 
