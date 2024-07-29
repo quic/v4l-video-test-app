@@ -482,7 +482,7 @@ int V4l2Encoder::setFrameRate(unsigned int numer, unsigned int denom) {
 }
 
 int V4l2Encoder::queueBuffers(int maxFrameCnt) {
-    int ret = 0, input_try = 0;
+    int ret = 0, retry_count = 0;
     unsigned int frameCounter = 0, LTRIdx = 0;
     auto handleDrainLastEvent = [&]() -> int {
         int ret = 0;
@@ -508,12 +508,12 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
     };
 
     auto isInputAvailable = [&]() -> bool {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         return !mInputBufs.empty();
     };
 
     auto needWaitForInput = [&]() -> bool {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         if (mPendingInputBufs.size() >= getMinInputCount()) {
             return true;
         }
@@ -526,7 +526,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         return (eos || frameNum >= maxFrameCnt);
     };
     auto getInputBuffer = [&]() -> std::shared_ptr<v4l2_buffer> {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mInputBufLock);
         auto buf = mInputBufs.front();
         mInputBufs.pop_front();
         mPendingInputBufs.push_back(buf);
@@ -566,7 +566,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         return ret;
     };
     auto queueAvailableOutputBuffers = [&]() -> int {
-        std::unique_lock<std::mutex> lock(mBufLock);
+        std::unique_lock<std::mutex> lock(mOutputBufLock);
         std::shared_ptr<v4l2_buffer> output = nullptr;
         int ret = 0;
 
@@ -621,7 +621,12 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         }
 
         if (!isInputAvailable()) {
+            if (retry_count >- 100) {
+                LOGE("%s: wait for input buffer timeout(1s)\n", __func__);
+                return -ETIMEDOUT;
+            }
             if (needWaitForInput()) {
+                retry_count++;
                 usleep(10 * 1000);
                 continue;
             }
@@ -634,6 +639,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         }
         LOGD("%s: %u frames queued.\n", __func__, frameCounter);
         frameCounter++;
+        retry_count = 0;
     }
 
     return ret;
@@ -722,9 +728,9 @@ int V4l2Encoder::writeDumpDataToFile(v4l2_buffer* buffer) {
 }
 
 int V4l2EncoderCB::onBufferDone(v4l2_buffer* buffer) {
-    std::unique_lock<std::mutex> lock(mEnc->mBufLock);
     int ret = 0;
     auto putInputBufferLocked = [&](v4l2_buffer* buf) -> int {
+        std::unique_lock<std::mutex> lock(mEnc->mInputBufLock);
         auto& inputBufs = mEnc->mInputBufs;
         auto& pendingInputBufs = mEnc->mPendingInputBufs;
 
@@ -739,6 +745,7 @@ int V4l2EncoderCB::onBufferDone(v4l2_buffer* buffer) {
         return 0;
     };
     auto putOutputBufferLocked = [&](v4l2_buffer* buf) -> int {
+        std::unique_lock<std::mutex> lock(mEnc->mOutputBufLock);
         auto& outputBufs = mEnc->mOutputBufs;
         auto& pendingOutputBufs = mEnc->mPendingOutputBufs;
 
