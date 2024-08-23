@@ -770,7 +770,7 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
                 LOGE("%s: wait for input buffer timeout(1s)\n", __func__);
                 return -ETIMEDOUT;
             }
-            
+
             if (needWaitForInput()) {
                 retry_count++;
                 usleep(10 * 1000);

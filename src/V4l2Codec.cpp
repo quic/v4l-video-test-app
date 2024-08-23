@@ -639,7 +639,7 @@ void V4l2Codec::freeBuffers(port_type port) {
     auto& bufPool =
         port == OUTPUT_PORT ? mOutputDMABuffersPool : mInputDMABuffersPool;
 
-    auto handleBufferFree = [&]() {
+    auto handleFreeBuffers = [&]() {
         while (!bufs.empty()) {
             auto buf = bufs.front();
             if (buf->m.planes) {
@@ -662,11 +662,11 @@ void V4l2Codec::freeBuffers(port_type port) {
     if (port == OUTPUT_PORT) {
         std::unique_lock<std::mutex> lock(mOutputBufLock);
         LOGD("Freeing %d + %d output buffers\n", bufs.size(), pendingBuf.size());
-        handleBufferFree();
+        handleFreeBuffers();
     } else {
         std::unique_lock<std::mutex> lock(mInputBufLock);
         LOGD("Freeing %d + %d input buffers\n", bufs.size(), pendingBuf.size());
-        handleBufferFree(); 
+        handleFreeBuffers();
     }
 }
 

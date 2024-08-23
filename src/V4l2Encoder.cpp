@@ -621,7 +621,7 @@ int V4l2Encoder::queueBuffers(int maxFrameCnt) {
         }
 
         if (!isInputAvailable()) {
-            if (retry_count >- 100) {
+            if (retry_count >= 100) {
                 LOGE("%s: wait for input buffer timeout(1s)\n", __func__);
                 return -ETIMEDOUT;
             }
