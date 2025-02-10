@@ -57,9 +57,17 @@ int V4l2Encoder::init() {
     if (ret) {
         return ret;
     }
-    ret = mV4l2Driver->OpenDMAHeap("system");
-    if (ret) {
-        return ret;
+    if (mMemoryType != V4L2_MEMORY_MMAP) {
+        // Only try to open dma_heap when memory type is not set to V4L2_MEMORY_MMAP
+        ret = mV4l2Driver->OpenDMAHeap("system");
+        if (ret && (mMemoryType == V4L2_MEMORY_DMABUF)) {
+            LOGE("Error: failed to open dma_heap while V4L2_MEMORY_DMABUF designated.\n");
+            return ret;
+        } else if (ret && (mMemoryType == 0)) {
+            setMemoryType("MMAP");
+        } else {
+            setMemoryType("DMA_BUF");
+        }
     }
     ret = mV4l2Driver->createPollThread();
     if (ret) {
@@ -77,7 +85,9 @@ int V4l2Encoder::init() {
 void V4l2Encoder::deinit() {
     mV4l2Driver->stopPollThread();
     mV4l2Driver->Close();
-    mV4l2Driver->CloseDMAHeap();
+    if (mMemoryType == V4L2_MEMORY_DMABUF) {
+        mV4l2Driver->CloseDMAHeap();
+    }
 }
 
 int V4l2Encoder::initFFYUVParser(std::string inputPath, int width, int height, std::string pixfmt) {
@@ -299,7 +309,6 @@ int V4l2Encoder::configureInput() {
     if (ret) {
         return ret;
     }
-    mMinInputCount = ctrl.value;
 
     if (mActualInputCount < mMinInputCount) {
         LOGV("update input count from %d to %d\n", mActualInputCount,
@@ -309,7 +318,7 @@ int V4l2Encoder::configureInput() {
 
     memset(&reqBufs, 0, sizeof(reqBufs));
     reqBufs.type = INPUT_MPLANE;
-    reqBufs.memory = V4L2_MEMORY_DMABUF;
+    reqBufs.memory = mMemoryType;
     reqBufs.count = mActualInputCount;
     ret = mV4l2Driver->reqBufs(&reqBufs);
     if (ret) {
@@ -322,7 +331,7 @@ int V4l2Encoder::configureInput() {
 }
 
 int V4l2Encoder::configureOutput() {
-    LOGV("V4l2Encoder::configureOutput().");
+    LOGV("V4l2Encoder::configureOutput().\n");
     struct v4l2_format fmt;
     struct v4l2_requestbuffers reqBufs;
     struct v4l2_control ctrl;
@@ -341,7 +350,6 @@ int V4l2Encoder::configureOutput() {
     if (ret) {
         return ret;
     }
-    mMinOutputCount = ctrl.value;
 
     if (mActualOutputCount < mMinOutputCount) {
         LOGV("update output count from %d to %d\n", mActualOutputCount,
@@ -354,7 +362,7 @@ int V4l2Encoder::configureOutput() {
 
     memset(&reqBufs, 0, sizeof(reqBufs));
     reqBufs.type = OUTPUT_MPLANE;
-    reqBufs.memory = V4L2_MEMORY_DMABUF;
+    reqBufs.memory = mMemoryType;
     reqBufs.count = mActualOutputCount;
     ret = mV4l2Driver->reqBufs(&reqBufs);
     if (ret) {
@@ -368,45 +376,55 @@ int V4l2Encoder::configureOutput() {
 
 int V4l2Encoder::feedInputDataToV4l2Buffer(std::shared_ptr<v4l2_buffer> buf,
                                            bool& eos, uint32_t frameCount) {
-    struct dma_buf_sync sync;
-    int ret = 0;
-    auto itr = mInputDMABuffersPool.find(buf->index);
-    if (itr == mInputDMABuffersPool.end()) {
+    int ret = 0, pkt_size = 0;
+    void* bufAddr = nullptr;
+    int frmWidth = getFrameWidth(), frmHeight = getFrameHeight();
+    int frmStride = getFrameStride(), frmScanline = getFrameScanline();
+    auto itr = mInputBuffersPool.find(buf->index);
+    if (itr == mInputBuffersPool.end()) {
         LOGE("Error: no DMA buffer found for buffer index: %d\n", buf->index);
         return -EINVAL;
     }
-    auto& dmaBuf = (*itr).second;
+    auto& buffer = itr->second;
 
-    MapBuf map(NULL, dmaBuf->mSize, PROT_READ | PROT_WRITE, MAP_SHARED, dmaBuf->mFd, 0);
-    if (!map.isMapSucess()) {
-        LOGE("Error: failed to mmap output buffer\n");
-        return -EINVAL;
+    if (mMemoryType == V4L2_MEMORY_DMABUF) {
+        auto dmaBuf = std::dynamic_pointer_cast<DMABuffer>(buffer);
+        struct dma_buf_sync sync;
+        MapBuf map(NULL, dmaBuf->mSize, PROT_READ | PROT_WRITE, MAP_SHARED, dmaBuf->mFd, 0);
+        if (!map.isMapSucess()) {
+            LOGE("Error: failed to mmap output buffer\n");
+            return -EINVAL;
+        }
+        bufAddr = map.getMappedAddr();
+        // LOG("%d Mapped input buffer ptr: %p\n", buf->index, bufAddr);
+
+        memset(bufAddr, 0, getInputSize());
+        sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
+        ret = ioctl(dmaBuf->mFd, DMA_BUF_IOCTL_SYNC, &sync);
+        if (ret) {
+            LOGD("input read DMA_BUF_SYNC_START failed with err = %d\n", ret);
+        }
+        pkt_size = mYUVParser->fillPacketData(bufAddr, frmWidth, frmHeight, frmStride, frmScanline,
+                                                mPixelFmt, eos);
+        sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
+        ret = ioctl(dmaBuf->mFd, DMA_BUF_IOCTL_SYNC, &sync);
+        if (ret) {
+            LOGD("input read DMA_BUF_SYNC_END failed with err = %d\n", ret);
+        }
+
+        buf->m.planes[0].bytesused = pkt_size;
+        buf->m.planes[0].data_offset = 0;
+        buf->m.planes[0].length = getInputSize();
+        buf->m.planes[0].m.fd = dmaBuf->mFd;
+    } else if (mMemoryType == V4L2_MEMORY_MMAP) {
+        auto mmapBuf = std::dynamic_pointer_cast<MMAPBuffer>(buffer);
+        bufAddr = mmapBuf->start[0];
+        pkt_size = mYUVParser->fillPacketData(bufAddr, frmWidth, frmHeight, frmStride, frmScanline,
+                                                mPixelFmt, eos);
+        buf->m.planes[0].bytesused = pkt_size;
+        buf->m.planes[0].data_offset = 0;
+        buf->m.planes[0].length = getInputSize();
     }
-    void* bufAddr = map.getMappedAddr();
-
-    // LOG("%d Mapped input buffer ptr: %p\n", buf->index, bufAddr);
-    int frmWidth = getFrameWidth(), frmHeight = getFrameHeight();
-    int frmStride = getFrameStride(), frmScanline = getFrameScanline();
-
-    memset(bufAddr, 0, getInputSize());
-
-    sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
-    ret = ioctl(dmaBuf->mFd, DMA_BUF_IOCTL_SYNC, &sync);
-    if (ret) {
-        LOGD("input read DMA_BUF_SYNC_START failed with err = %d\n", ret);
-    }
-    int pkt_size = mYUVParser->fillPacketData(bufAddr, frmWidth, frmHeight, frmStride, frmScanline,
-                                              mPixelFmt, eos);
-    sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
-    ret = ioctl(dmaBuf->mFd, DMA_BUF_IOCTL_SYNC, &sync);
-    if (ret) {
-        LOGD("input read DMA_BUF_SYNC_END failed with err = %d\n", ret);
-    }
-
-    buf->m.planes[0].bytesused = pkt_size;
-    buf->m.planes[0].data_offset = 0;
-    buf->m.planes[0].length = getInputSize();
-    buf->m.planes[0].m.fd = dmaBuf->mFd;
 
     auto timePerFrame =  (float)(1000000.0 / (1.0 * mFrameRate));
     buf->timestamp.tv_sec = frameCount * (long)(timePerFrame / 1000000);
@@ -471,7 +489,7 @@ int V4l2Encoder::setFrameRate(unsigned int numer, unsigned int denom) {
     struct v4l2_streamparm sParm;
     memset(&sParm, 0, sizeof(sParm));
 
-    sParm.type = OUTPUT_MPLANE;
+    sParm.type = INPUT_MPLANE;
     sParm.parm.capture.timeperframe.numerator = numer;
     sParm.parm.capture.timeperframe.denominator = denom;
     int ret = mV4l2Driver->setParm(&sParm);
@@ -685,45 +703,61 @@ void V4l2Encoder::logV4l2BufferDataToFile(std::uint8_t* buffer, int buffer_len, 
 #endif
 }
 
-int V4l2Encoder::writeDumpDataToFile(v4l2_buffer* buffer) {
-    struct dma_buf_sync sync;
+int V4l2Encoder::writeDumpDataToFile(v4l2_buffer* buf) {
+    std::unique_lock<std::mutex> lock(mOutputBufLock);
     std::uint8_t* pBuffer = nullptr;
+    std::unique_ptr<MapBuf> map = nullptr;
     int ret = 0;
-    MapBuf map(NULL, buffer->m.planes[0].length, PROT_READ, MAP_SHARED, buffer->m.planes[0].m.fd,
-               0);
 
-    if (!map.isMapSucess()) {
-        LOGE("Error: failed to mmap output buffer\n");
-        return -EINVAL;
+    if (mMemoryType == V4L2_MEMORY_DMABUF) {
+        map = std::make_unique<MapBuf>(nullptr, buf->m.planes[0].length, PROT_READ, MAP_SHARED, buf->m.planes[0].m.fd, 0);
+        if (!map->isMapSucess()) {
+            LOGE("Error: failed to mmap output buffer\n");
+            return -EINVAL;
+        }
+        pBuffer = (std::uint8_t*)map->getMappedAddr();
+    } else if (mMemoryType == V4L2_MEMORY_MMAP) {
+        auto itr = mOutputBuffersPool.find(buf->index);
+        if (itr == mInputBuffersPool.end()) {
+            LOGE("Error: no mmap buffer found for buffer index: %d\n", buf->index);
+            return -EINVAL;
+        }
+        auto& buffer = itr->second;
+        auto mmapBuf = std::dynamic_pointer_cast<MMAPBuffer>(buffer);
+        pBuffer = (std::uint8_t*)mmapBuf->start[0];
     }
-    pBuffer = (std::uint8_t*)map.getMappedAddr();
 
     LOGD("Writing %d bytes to output, first 8 bytes: [%x %x %x %x %x %x %x "
         "%x]\n",
-        buffer->m.planes[0].bytesused, pBuffer[0], pBuffer[1], pBuffer[2],
+        buf->m.planes[0].bytesused, pBuffer[0], pBuffer[1], pBuffer[2],
         pBuffer[3], pBuffer[4], pBuffer[5], pBuffer[6], pBuffer[7]);
     if (isNALEncodingEnabled()) {
-        ret = replaceNalSizeWAndWrite(pBuffer, buffer->m.planes[0].bytesused);
+        ret = replaceNalSizeWAndWrite(pBuffer, buf->m.planes[0].bytesused);
         if (ret != 0) {
             return ret;
         }
         return 0;
     }
 
-    sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_READ;
-    ret = ioctl(buffer->m.planes[0].m.fd, DMA_BUF_IOCTL_SYNC, &sync);
-    if (ret) {
-        LOGD("Save encode DMA_BUF_SYNC_START failed with err = %d\n",
-            ret);
+    if (mMemoryType == V4L2_MEMORY_DMABUF) {
+        struct dma_buf_sync sync;
+        sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_READ;
+        ret = ioctl(buf->m.planes[0].m.fd, DMA_BUF_IOCTL_SYNC, &sync);
+        if (ret) {
+            LOGD("Save encode DMA_BUF_SYNC_START failed with err = %d\n",
+                ret);
+        }
+        fwrite(pBuffer, buf->m.planes[0].bytesused, 1, mOutputDumpFile);
+        logV4l2BufferDataToFile(pBuffer, buf->m.planes[0].bytesused, mEncodedBufferReceieved);
+        sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_READ;
+        ret = ioctl(buf->m.planes[0].m.fd, DMA_BUF_IOCTL_SYNC, &sync);
+        if (ret) {
+            LOGD("Save encode DMA_BUF_SYNC_END failed with err = %d\n", ret);
+        }
+    } else if (mMemoryType == V4L2_MEMORY_MMAP) {
+        fwrite(pBuffer, buf->m.planes[0].bytesused, 1, mOutputDumpFile);
+        logV4l2BufferDataToFile(pBuffer, buf->m.planes[0].bytesused, mEncodedBufferReceieved);
     }
-    fwrite(pBuffer, buffer->m.planes[0].bytesused, 1, mOutputDumpFile);
-    logV4l2BufferDataToFile(pBuffer, buffer->m.planes[0].bytesused, mEncodedBufferReceieved);
-    sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_READ;
-    ret = ioctl(buffer->m.planes[0].m.fd, DMA_BUF_IOCTL_SYNC, &sync);
-    if (ret) {
-        LOGD("Save encode DMA_BUF_SYNC_END failed with err = %d\n", ret);
-    }
-
     return 0;
 }
 

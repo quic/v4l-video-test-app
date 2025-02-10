@@ -63,6 +63,7 @@ struct ConfigureStruct {
     std::string InputPath;
     std::string Outputpath;
     std::string PixelFormat;
+    std::string MemoryType;
     std::string VideoDevice;
     std::string DumpInputPath;
 
