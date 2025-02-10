@@ -28,7 +28,7 @@
 #define SUCCESS 0
 #define BACKTRACE_SIZE 1024
 
-#define TEST_APP_VERSION "1.14"
+#define TEST_APP_VERSION "1.15"
 
 uint32_t gLogLevel = 0xF;
 
@@ -110,6 +110,10 @@ static int TestingDecoder(ConfigureStruct& config, std::string sessionId) {
     mDecoder = std::make_shared<V4l2Decoder>(codecFmt, pixelFmt, sessionId);
     mDecoderCB = std::make_shared<V4l2DecoderCB>(mDecoder.get(), sessionId);
 
+    ret = mDecoder->setMemoryType(config.MemoryType);
+    if (ret) {
+        return ret;
+    }
     ret = mDecoder->init();
     if (ret) {
         return ret;
@@ -165,6 +169,10 @@ static int TestingEncoder(ConfigureStruct& config, std::string sessionId) {
     mEncoder = std::make_shared<V4l2Encoder>(codecFmt, pixelFmt, sessionId);
     mEncoderCB = std::make_shared<V4l2EncoderCB>(mEncoder.get(), sessionId);
 
+    ret = mEncoder->setMemoryType(config.MemoryType);
+    if (ret) {
+        return ret;
+    }
     ret = mEncoder->init();
     if (ret) {
         return ret;

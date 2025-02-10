@@ -419,6 +419,28 @@ int V4l2Driver::AllocDMABuffer(uint64_t size, int* fd) {
     return ret;
 }
 
+int V4l2Driver::AllocMMAPBuffer(std::shared_ptr<MMAPBuffer> mmapBuf,
+                                std::shared_ptr<v4l2_buffer> buf) {
+    int ret = ioctl(mFd, VIDIOC_QUERYBUF, buf.get());
+    if (ret) {
+        LOGE("Error: VIDIOC_QUERYBUF failed while allocating mmap buf.\n");
+        return ret;
+    }
+
+    mmapBuf->length[0] = buf->m.planes[0].length;
+    mmapBuf->start[0] = mmap(NULL, buf->m.planes[0].length,
+                            PROT_READ | PROT_WRITE,
+                            MAP_SHARED,
+                            mFd, buf->m.planes[0].m.mem_offset);
+    if (MAP_FAILED == mmapBuf->start[0])
+    {
+        LOGE("Error: mmap failed while allocating mmap buf.\n");
+        return -1;
+    }
+
+    return 0;
+}
+
 void ThreadFunc(V4l2Driver& driver) {
     driver.threadLoop();
 }
@@ -483,7 +505,7 @@ int V4l2Driver::threadLoop() {
             buffer.type = OUTPUT_MPLANE;
             buffer.m.planes = plane;
             buffer.length = 1;
-            buffer.memory = V4L2_MEMORY_DMABUF;
+            buffer.memory = mMemoryType;
             do {
                 if (ioctl(mFd, VIDIOC_DQBUF, &buffer)) {
                     break;
@@ -501,7 +523,7 @@ int V4l2Driver::threadLoop() {
             buffer.type = INPUT_MPLANE;
             buffer.m.planes = plane;
             buffer.length = 1;
-            buffer.memory = V4L2_MEMORY_DMABUF;
+            buffer.memory = mMemoryType;
             do {
                 if (ioctl(mFd, VIDIOC_DQBUF, &buffer)) {
                     break;
@@ -695,6 +717,11 @@ int V4l2Driver::setControl(v4l2_control* ctrl) {
         return -EINVAL;
     }
 
+    return 0;
+}
+
+int V4l2Driver::setMemoryType(unsigned int memoryType) {
+    mMemoryType = memoryType;
     return 0;
 }
 
