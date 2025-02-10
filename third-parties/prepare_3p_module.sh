@@ -11,6 +11,7 @@
 rm -rf ./jsoncpp
 git clone https://github.com/open-source-parsers/jsoncpp.git
 cd jsoncpp
+git checkout tags/1.9.6
 mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=../../aarch64_toolchain.cmake -DCMAKE_INSTALL_PREFIX=../output -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
 make && make install
@@ -20,5 +21,6 @@ cd ../../
 rm -rf ./ffmpeg
 git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 cd ffmpeg
+git checkout tags/n6.1.2
 ./configure --enable-shared --enable-static --prefix=./output --cross-prefix=aarch64-linux-gnu- --arch=arm64 --target-os=linux --disable-programs --disable-doc --disable-avdevice --disable-swscale --disable-postproc --disable-avfilter --disable-encoders --disable-decoders --disable-muxers --disable-devices --disable-filters
 make && make install
