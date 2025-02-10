@@ -634,7 +634,8 @@ int V4l2Codec::allocateBuffers(port_type port) {
     return ret;
 }
 
-void V4l2Codec::freeBuffers(port_type port) {
+int V4l2Codec::freeBuffers(port_type port) {
+    int ret = 0;
     struct v4l2_requestbuffers reqBufs;
     auto& bufs = port == OUTPUT_PORT ? mOutputBufs : mInputBufs;
     auto& pendingBuf =
@@ -676,10 +677,11 @@ void V4l2Codec::freeBuffers(port_type port) {
     reqBufs.type = port == OUTPUT_PORT ? OUTPUT_MPLANE : INPUT_MPLANE;
     reqBufs.memory = mMemoryType;
     reqBufs.count = 0;
-    int ret = mV4l2Driver->reqBufs(&reqBufs);
+    ret = mV4l2Driver->reqBufs(&reqBufs);
     if (ret) {
-        LOGE("Reset buffers to 0 failed.\n");
+        return ret;
     }
+    return 0;
 }
 
 std::shared_ptr<v4l2_buffer> V4l2Codec::allocateBuffer(int index, port_type port, int bufSize) {

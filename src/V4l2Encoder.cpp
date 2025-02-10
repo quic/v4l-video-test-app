@@ -136,6 +136,10 @@ int V4l2Encoder::queryControlsAVC(uint32_t level) {
 
     ret = mV4l2Driver->queryControl(&queryctrl);
     if (ret != 0) {
+        LOGW("WARNING: failed to query AVC level. Will remove from static ctrls.\n");
+        mStaticControls.remove_if([](auto ctrlInfo) {
+            return ctrlInfo->id == V4L2_CID_MPEG_VIDEO_H264_LEVEL;
+        });
         return -1;
     }
 
@@ -170,6 +174,10 @@ int V4l2Encoder::queryControlsHEVC(uint32_t level, uint32_t tier) {
 
     ret = mV4l2Driver->queryControl(&queryCtrlTier);
     if (ret != 0) {
+        LOGW("WARNING: failed to query HEVC tier. Will remove from static ctrls.\n");
+        mStaticControls.remove_if([](auto ctrlInfo){
+            return ctrlInfo->id == V4L2_CID_MPEG_VIDEO_HEVC_TIER;
+        });
         return -1;
     }
 
@@ -180,6 +188,10 @@ int V4l2Encoder::queryControlsHEVC(uint32_t level, uint32_t tier) {
 
     ret = mV4l2Driver->queryControl(&queryCtrlLevel);
     if (ret != 0) {
+        LOGW("WARNING: failed to query HEVC level. Will remove from static ctrls.\n");
+        mStaticControls.remove_if([](auto ctrlInfo){
+            return ctrlInfo->id == V4L2_CID_MPEG_VIDEO_HEVC_LEVEL;
+        });
         return -1;
     }
 
@@ -307,7 +319,9 @@ int V4l2Encoder::configureInput() {
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_OUTPUT;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
-        return ret;
+        LOGW("WARNING: Failed to query min input buffer count. Use default values\n");
+    } else {
+        mMinInputCount = ctrl.value;
     }
 
     if (mActualInputCount < mMinInputCount) {
@@ -348,7 +362,9 @@ int V4l2Encoder::configureOutput() {
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
-        return ret;
+        LOGW("WARNING: Failed to query min output buffer count. Use default values\n");
+    } else {
+        mMinOutputCount = ctrl.value;
     }
 
     if (mActualOutputCount < mMinOutputCount) {

@@ -157,7 +157,7 @@ class V4l2Codec {
         std::list<std::shared_ptr<EventConfig>> commands);
     bool fillCfgCtrls(std::shared_ptr<EventConfig> ctrl, unsigned int* id,
                       int* value);
-    void freeBuffers(enum port_type port);
+    int freeBuffers(enum port_type port);
     bool isInputPortStarted() const { return mInputStreamonDone; }
     void setInputPortStarted(bool isStarted) { mInputStreamonDone = isStarted; }
     bool isOutputPortStarted() const { return mOutputStreamonDone; }

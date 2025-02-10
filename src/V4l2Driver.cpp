@@ -475,6 +475,11 @@ int V4l2Driver::threadLoop() {
     pollFds[0].fd = mFd;
 
     while (!mPollThreadExit) {
+        if (!mBufferQueued) {
+            usleep(10 * 1000);
+            continue;
+        }
+
         int ret = poll(pollFds, 1, 1000);
         if (ret == -ETIMEDOUT) {
             LOGW("V4l2Driver: poll timedout\n");
@@ -508,13 +513,14 @@ int V4l2Driver::threadLoop() {
             buffer.memory = mMemoryType;
             do {
                 if (ioctl(mFd, VIDIOC_DQBUF, &buffer)) {
+                    LOGE("Error: Failed to poll output buffer.\n");
                     break;
                 }
 
                 if (mCb->onV4l2BufferDone(&buffer)) {
                     mError = true;
                 }
-            } while (1);
+            } while (0);
         }
         if ((pollFds[0].revents & POLLOUT) || (pollFds[0].revents & POLLWRNORM)) {
             LOGV("V4l2Driver: OUT/WRNORM received.\n");
@@ -526,12 +532,14 @@ int V4l2Driver::threadLoop() {
             buffer.memory = mMemoryType;
             do {
                 if (ioctl(mFd, VIDIOC_DQBUF, &buffer)) {
+                    LOGE("Error: Failed to poll input buffer.\n");
                     break;
                 }
+                LOGD("Poll input buffer succeeded.\n");
                 if (mCb->onV4l2BufferDone(&buffer)) {
                     mError = true;
                 }
-            } while (1);
+            } while (0);
         }
         {
             std::unique_lock<std::mutex> lock(mPollThreadLock);
@@ -740,11 +748,17 @@ int V4l2Driver::reqBufs(struct v4l2_requestbuffers* reqbufs) {
 }
 
 int V4l2Driver::queueBuf(v4l2_buffer* buf) {
+    if (!buf) {
+        LOGE("Error: queuing empty v4l2 buffer.\n");
+        return -EINVAL;
+    }
+
     int ret = ioctl(mFd, VIDIOC_QBUF, buf);
     if (ret) {
         LOGE("failed to QBUF: %s\n", strerror(ret));
         return -EINVAL;
     }
+    mBufferQueued = true;
     return 0;
 }
 
