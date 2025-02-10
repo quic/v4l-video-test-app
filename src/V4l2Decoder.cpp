@@ -133,7 +133,9 @@ int V4l2Decoder::configureInput() {
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_OUTPUT;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
-        return ret;
+        LOGW("WARNING: Failed to query min input buffer count. Use default values");
+    } else {
+        mMinInputCount = ctrl.value;
     }
 
     if (mActualInputCount < mMinInputCount) {
@@ -194,10 +196,11 @@ int V4l2Decoder::configureOutput() {
     if (ret) {
         return ret;
     }
-    mOBufWidth = fmt.fmt.pix_mp.width;
+    //mOBufWidth = fmt.fmt.pix_mp.width;
     mOBufHeight = fmt.fmt.pix_mp.height;
     mStride = fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
     mOutputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
+    mOBufWidth = mStride;
     LOGD("%s: output Buffer(%dx%d), Stride(%d), OutputSize (%d)\n", __func__,
         mOBufWidth, mOBufHeight, mStride, mOutputSize);
 
@@ -213,7 +216,9 @@ int V4l2Decoder::configureOutput() {
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
-        return ret;
+        LOGW("WARNING: Failed to query min output buffer count. Use default values\n");
+    } else {
+        mMinOutputCount = ctrl.value;
     }
 
     if (mActualOutputCount < mMinOutputCount) {
@@ -320,15 +325,14 @@ int V4l2Decoder::reconfigureOutput() {
     }
     latestOutputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
 
-#if 0
     memset(&ctrl, 0, sizeof(ctrl));
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {
-        return ret;
+        LOGW("WARNING: Failed to query min output buffer count. Use default values\n");
+    } else {
+        latestOutputMinCount = ctrl.value;
     }
-    latestOutputMinCount = ctrl.value;
-#endif
 
     isBitDepthChanged = detectBitDepthChange();
 
@@ -724,10 +728,17 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
             seekFrom = -1;
             seekTo = -1;
         }
-        LOGW("queueBuffers: UPDATED: will seek from %d to %d.\n", seekFrom,
-            seekTo);
-
+        if (seekFrom != -1) {
+            LOGW("queueBuffers: UPDATED: will seek from %d to %d.\n", seekFrom,
+                seekTo);
+        }
         return 0;
+    };
+    auto updateSeekInfo = [&]() {
+        seekFrom = mIDRSeek.size() == 0 ? -1 : mIDRSeek.begin()->first;
+        seekTo = mIDRSeek.size() == 0 ? -1 : mIDRSeek.begin()->second;
+        randomSeekFrom = mRandomSeek.size() == 0 ? -1 : mRandomSeek.begin()->first;
+        randomSeekTo = mRandomSeek.size() == 0 ? -1 : mRandomSeek.begin()->second;
     };
 
     while (mErrorReceived == false) {
@@ -735,6 +746,8 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         ret = setDynamicCommands(frameCounter);
         if (ret) {
             return ret;
+        } else {
+            updateSeekInfo();
         }
 
         ret = handleRandomSeekIfNeeded();

@@ -8,6 +8,7 @@
 #ifndef _TEST_DRIVER_H_
 #define _TEST_DRIVER_H_
 
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -256,6 +257,8 @@ class V4l2Driver {
 
     std::shared_ptr<V4l2DriverCallback> mCb;
     std::shared_ptr<std::thread> mPollThread;
+
+    std::atomic_bool mBufferQueued = false;
 };
 
 #endif
