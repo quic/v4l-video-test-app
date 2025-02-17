@@ -425,7 +425,7 @@ int main(int argc, char** argv) {
 
             std::cout << "Testcase[" << filename << "] : Failed" << std::endl;
             resultFile << "Testcase[ " << filename << "] : Failed" << std::endl;
-            return ret;
+            break;
         }
 
         runAndWaitForComplete(ExecutionMode,
