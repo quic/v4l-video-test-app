@@ -408,6 +408,7 @@ int main(int argc, char** argv) {
     ret = getRegexMatchFileNames(configPath, matched_files, pathToFile);
     if (ret) {
         std::cout << "Testcase : Failed" << std::endl;
+        resultFile << "Testcase : Failed" << std::endl;
         return ret;
     }
 
