@@ -349,6 +349,20 @@ int main(int argc, char** argv) {
 
     InitSignalHandler();
 
+    std::ofstream resultFile;
+    if (resultsPath == "") {
+        resultsPath = "/etc/Results.csv";
+    }
+
+    resultFile.open(resultsPath, std::ofstream::app);
+    if (!resultFile.is_open()) {
+        std::cout << "Testcase : Failed to open Results.csv file";
+        std::cout << std::endl;
+        return -1;
+    }
+
+    resultFile << "Testapp Version " << TEST_APP_VERSION << " ";
+
     while (1) {
         int optIndex = 0;
         static struct option longOpts[] = {
@@ -399,20 +413,6 @@ int main(int argc, char** argv) {
 
     std::string ExecutionMode = "Sequential";
     std::unordered_map<std::string, ConfigureStruct> mapTestCasesConfig;
-
-    std::ofstream resultFile;
-    if (resultsPath == "") {
-        resultsPath = "/etc/Results.csv";
-    }
-
-    resultFile.open(resultsPath, std::ofstream::app);
-    if (!resultFile.is_open()) {
-        std::cout << "Testcase : Failed to open Results.csv file";
-        std::cout << std::endl;
-        return -1;
-    }
-
-    resultFile << "Testapp Version " << TEST_APP_VERSION << " ";
 
     for (const auto& filename : matched_files) {
         std::cout << "parse " << filename << '\n';
