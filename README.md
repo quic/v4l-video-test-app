@@ -13,66 +13,115 @@ This project requires few opensource dependencies for compilation and execution 
 
 ### 2.1. Setup Development Environment
 
-To compile this project we need to setup the cross compiling environment for ARM architecture.
+To compile this project we need to setup the cross compiling environment for ARM architecture. Here we are using Ubuntu 22.04 as an example:
 
-#### **NOTE: This project was written in Ubuntu 20.04-WSL. (*Linux Kernel newer or equal to 6.2 (6.6 recommended)*)
-
-#### 2.1.1. Install ARM Cross-compiler toolchain : [**Compiler**](https://developer.arm.com/downloads/-/gnu-a)
-Recommended : gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
-
-#### 2.1.2. Install the latest CMake for compilation of project.
+Firstly, make sure you have setup the commonly-used development tools using the following commands:
 
 ```bash
-sudo apt-get -y install cmake
+sudo apt update
+sudo apt upgrade
+sudo apt install autoconf automake build-essential cmake git wget yasm # you may install more packages if you need them.
 ```
 
-#### 2.1.3. Follow the below commands to setup your compiler
+Secondly, search the toolchain version that the system can support using the following command:
 
-##### Copy the compressed compiler in /local/ in your machine. Unzip the compiler in /local/
 ```bash
-cd /local/
-tar -xvf ./gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+sudo apt search aarch64-linux-gnu
 ```
 
-##### Create toolchain directory
-```bash
-sudo mkdir -p /usr/aarch64-linux-gnu
+You may see the following results of the searching:
+```
+g++-10-aarch64-linux-gnu/jammy-updates,jammy-security 10.5.0-1ubuntu1~22.04cross1 amd64
+  GNU C++ compiler (cross compiler for arm64 architecture)
+
+g++-11-aarch64-linux-gnu/jammy-updates,jammy-security,now 11.4.0-1ubuntu1~22.04cross1 amd64
+  GNU C++ compiler (cross compiler for arm64 architecture)
+
+g++-12-aarch64-linux-gnu/jammy-updates,jammy-security 12.3.0-1ubuntu1~22.04cross1 amd64
+  GNU C++ compiler (cross compiler for arm64 architecture)
+
+g++-9-aarch64-linux-gnu/jammy-updates,jammy-security 9.5.0-1ubuntu1~22.04cross1 amd64
+  GNU C++ compiler (cross compiler for arm64 architecture)
+
+g++-aarch64-linux-gnu/jammy,now 4:11.2.0-1ubuntu1 amd64 [installed]
+  GNU C++ compiler for the arm64 architecture
+
+gcc-10-aarch64-linux-gnu/jammy-updates,jammy-security 10.5.0-1ubuntu1~22.04cross1 amd64
+  GNU C compiler (cross compiler for arm64 architecture)
+
+gcc-10-aarch64-linux-gnu-base/jammy-updates,jammy-security 10.5.0-1ubuntu1~22.04cross1 amd64
+  GCC, the GNU Compiler Collection (base package)
+
+gcc-10-plugin-dev-aarch64-linux-gnu/jammy-updates,jammy-security 10.5.0-1ubuntu1~22.04cross1 amd64
+  Files for GNU GCC plugin development.
+
+gcc-11-aarch64-linux-gnu/jammy-updates,jammy-security,now 11.4.0-1ubuntu1~22.04cross1 amd64
+  GNU C compiler (cross compiler for arm64 architecture)
+
+gcc-11-aarch64-linux-gnu-base/jammy-updates,jammy-security,now 11.4.0-1ubuntu1~22.04cross1 amd64
+  GCC, the GNU Compiler Collection (base package)
+
+gcc-11-plugin-dev-aarch64-linux-gnu/jammy-updates,jammy-security 11.4.0-1ubuntu1~22.04cross1 amd64
+  Files for GNU GCC plugin development.
+
+gcc-12-aarch64-linux-gnu/jammy-updates,jammy-security 12.3.0-1ubuntu1~22.04cross1 amd64
+  GNU C compiler (cross compiler for arm64 architecture)
+
+gcc-12-aarch64-linux-gnu-base/jammy-updates,jammy-security 12.3.0-1ubuntu1~22.04cross1 amd64
+  GCC, the GNU Compiler Collection (base package)
+
+gcc-12-plugin-dev-aarch64-linux-gnu/jammy-updates,jammy-security 12.3.0-1ubuntu1~22.04cross1 amd64
+  Files for GNU GCC plugin development.
+
+gcc-9-aarch64-linux-gnu/jammy-updates,jammy-security 9.5.0-1ubuntu1~22.04cross1 amd64
+  GNU C compiler (cross compiler for arm64 architecture)
+
+gcc-9-aarch64-linux-gnu-base/jammy-updates,jammy-security 9.5.0-1ubuntu1~22.04cross1 amd64
+  GCC, the GNU Compiler Collection (base package)
+
+gcc-9-plugin-dev-aarch64-linux-gnu/jammy-updates,jammy-security 9.5.0-1ubuntu1~22.04cross1 amd64
+  Files for GNU GCC plugin development.
+
+gcc-aarch64-linux-gnu/jammy,now 4:11.2.0-1ubuntu1 amd64 [installed]
+  GNU C compiler for the arm64 architecture
 ```
 
-##### Copy toolchain files to dst directory
+Thirdly, using the following command to install aarch64 cross-compiling toolchain:
+
 ```bash
-cd gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu
-sudo cp -r ./* /usr/aarch64-linux-gnu
+sudo apt install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
 ```
 
-##### Add paths for the environment
+You are free to use other version of gcc/g++ if you have any perticular requirements.
+
+After the installation completes, you may using the following commands to check if the installation succeeded:
+
 ```bash
-export ARCH=arm64
-export PATH="$PATH:/usr/aarch64-linux-gnu/bin"
-export PATH="$PATH:/pkg/asw/compilers/gnu/linaro-toolchain/5.1/bin/"
-export CROSS_COMPILE=/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
+aarch64-linux-gnu-gcc --version
+aarch64-linux-gnu-g++ --version
 ```
 
-##### To check if the compiler is properly set use the below commands
-```bash
-aarch64-none-linux-gnu-gcc -v
-aarch64-none-linux-gnu-g++ -v
-```
-
-##### Setup the include file for linux headers
-```bash
-cd /usr/aarch64-linux-gnu/aarch64-none-linux-gnu/libc/usr/include
-sudo mv linux linux_bak
-sudo ln -s /usr/include/linux ./linux
-```
+If the commands return the version number of gcc/g++, then the installation completed.
 
 ### 2.2 Install and compile the dependent projects
 
 Run the script [**prepare_3p_module.sh**](https://github.com/quic/v4l-video-test-app/blob/master/third-parties/prepare_3p_module.sh) present in [**v4l_video_test_app/third-parties**](https://github.com/quic/v4l-video-test-app/tree/master/third-parties) folder to clone, compile and install the shared libraries and include file.
 
-##### **NOTE: The install location of output headers & libs can be modified in this script. Update the top-level [**CMakeLists.txt**](https://github.com/quic/v4l-video-test-app/blob/master/CMakeLists.txt) to make sure that they can be found.
+##### **NOTE: The install location of output headers & libs can be modified in this script. Update the top-level [**CMakeLists.txt**](https://github.com/quic/v4l-video-test-app/blob/master/CMakeLists.txt) to make sure that they can be found.**
 
 #### 2.2.1. Follow the below commands to compile the third party dependencies
+##### Update compiler path according to your environment
+You should check where your compilers locate. If you use the previous commands above, you may see them in the following location with the following command:
+```bash
+$ which aarch64-linux-gnu-gcc
+/usr/bin/aarch64-linux-gnu-gcc
+$ which aarch64-linux-gnu-g++
+/usr/bin/aarch64-linux-gnu-g++
+```
+**NOTE: The compiler path in aarch64_toolchain.cmake should be set as these paths.**
+
+**NOTE: The same path should be set to CMAKE_C_COMPILER and CMAKE_CXX_COMPILER in project CMakelists.txt.**
+
 ##### Give prepare_3p_module.sh executable rights and run the scripts
 ```bash
 cd v4l-video-test-app/third-parties
@@ -87,6 +136,7 @@ Once the environment is set and dependent projects are install we are ready for 
 Run script [**build.sh**](https://github.com/quic/v4l-video-test-app/blob/master/build.sh) to build the project. This would build the project into an executable file **"iris_v4l2_test"** in "v4l_video_test_app/build" folder.
 
 #### 2.3.1. Follow the below commands to compile the executable
+
 ##### Give build.sh executable rights and run the scripts
 ```bash
 cd v4l-video-test-app/
@@ -272,3 +322,4 @@ This table specify the vaild controls which can be used and their possible value
 ## 5. License
 
 Project is licensed under the **BSD-3-Clause-Clear License**. See [LICENSE.txt](https://github.com/quic/v4l-video-test-app/blob/master/LICENSE.txt) for the full license text.
+
