@@ -1,0 +1,5 @@
+.vscode
+*.patch
+build
+third-parties/ffmpeg/
+third-parties/jsoncpp/
