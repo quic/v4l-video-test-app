@@ -41,9 +41,14 @@ struct MMAPBuffer : public Buffer {
             start[i] = nullptr;
             length[i] = 0;
         }
+        if (mFd >= 0) {
+            close(mFd);
+            mFd = -1;
+        }
     }
     void *start[VIDEO_MAX_PLANES];
     size_t length[VIDEO_MAX_PLANES];
+    int mFd;
 };
 
 #endif
