@@ -16,6 +16,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "V4l2Codec.h"
 #include "V4l2Driver.h"
@@ -427,19 +428,66 @@ int V4l2Driver::AllocMMAPBuffer(std::shared_ptr<MMAPBuffer> mmapBuf,
         return ret;
     }
 
+    struct v4l2_exportbuffer expbuf = {
+        .type = buf->type,
+        .index = buf->index,
+        .plane = 0,
+        .flags = O_CLOEXEC | O_RDWR,
+    };
+    ret = ioctl(mFd, VIDIOC_EXPBUF, &expbuf);
+    if (ret < 0) {
+        LOGE("Error: VIDIOC_EXPBUF failed for buffer index %d\n", buf->index);
+        return ret;
+    }
+
     mmapBuf->length[0] = buf->m.planes[0].length;
+    mmapBuf->mFd = expbuf.fd;
+
+    if (expbuf.fd <= 0) {
+        LOGE("Error: Invalid dma_buf fd: %d\n", expbuf.fd);
+        return -EINVAL;
+    }
+
+    if (buf->m.planes[0].length == 0) {
+        LOGE("Error: Invalid buffer length: 0\n");
+        close(expbuf.fd);
+        return -EINVAL;
+    }
+
+    struct stat buf_stat;
+    if (fstat(expbuf.fd, &buf_stat) < 0) {
+        int stat_errno = errno;
+        LOGE("Error: fstat failed on dma_buf fd %d. Error: %d (%s)\n",
+             expbuf.fd, stat_errno, strerror(stat_errno));
+        close(expbuf.fd);
+        return -stat_errno;
+    }
+
+    LOGV("V4l2Driver::AllocMMAPBuffer: dma_buf stats - size: %lld, blocks: %lld, blksize: %d\n",
+         (long long)buf_stat.st_size, (long long)buf_stat.st_blocks, (int)buf_stat.st_blksize);
+
     mmapBuf->start[0] = mmap(NULL, buf->m.planes[0].length,
                             PROT_READ | PROT_WRITE,
                             MAP_SHARED,
-                            mFd, buf->m.planes[0].m.mem_offset);
-    if (MAP_FAILED == mmapBuf->start[0])
-    {
-        LOGE("Error: mmap failed while allocating mmap buf.\n");
-        return -1;
+                            expbuf.fd, 0);
+
+    if (MAP_FAILED == mmapBuf->start[0]) {
+        int saved_errno = errno;
+        close(expbuf.fd);
+        LOGE("Error: mmap failed while allocating mmap buf. Error: %d (%s)\n",
+             saved_errno, strerror(saved_errno));
+
+        if (saved_errno == EINVAL) {
+            LOGE("Possible cause: buffer size mismatch. Requested: %u, dma_buf size: %lld\n",
+                 (unsigned int)buf->m.planes[0].length, (long long)buf_stat.st_size);
+        }
+
+        return -saved_errno;
     }
 
     return 0;
 }
+
 
 void ThreadFunc(V4l2Driver& driver) {
     driver.threadLoop();
