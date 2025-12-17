@@ -15,18 +15,16 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O2 -Wl,--no-as-needed")
 endif()
 
+find_package(jsoncpp REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET GLOBAL libavcodec libavutil libavformat)
+
 
 # Include directories
 set(VIDC_TEST_INCLUDES
     inc/
-    third-parties/jsoncpp/output/include
-    third-parties/ffmpeg/output/include
 )
 include_directories(${VIDC_TEST_INCLUDES})
-link_directories(
-    third-parties/jsoncpp/output/lib
-    third-parties/ffmpeg/output/lib
-)
 
 set(VIDC_TEST_SOURCES
     IrisTestApp.cpp
@@ -41,4 +39,4 @@ set(VIDC_TEST_SOURCES
 )
 
 add_executable(iris_v4l2_test ${VIDC_TEST_SOURCES})
-target_link_libraries(iris_v4l2_test avformat avcodec swresample avutil pthread jsoncpp)
+target_link_libraries(iris_v4l2_test PkgConfig::AVCODEC pthread jsoncpp_lib)
