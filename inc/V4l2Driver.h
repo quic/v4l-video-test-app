@@ -57,7 +57,7 @@ enum v4l2_mpeg_video_intra_refresh_period_type {
 #endif
 
 #ifndef V4L2_PIX_FMT_AV1
-#define V4L2_PIX_FMT_AV1                                    v4l2_fourcc('A', 'V', '1', '0')
+#define V4L2_PIX_FMT_AV1                                    v4l2_fourcc('A', 'V', '0', '1')
 #endif
 
 #define INPUT_MPLANE V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE
