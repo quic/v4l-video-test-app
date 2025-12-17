@@ -5,13 +5,6 @@ project(iris_v4l2_test)
 # Compiler flags
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR aarch64)
-set(CMAKE_EXE_LINKER_FLAGS "-static")
-set(CMAKE_EXECUTABLE_ENABLE_EXPORTS TRUE)
-set(CMAKE_C_COMPILER /usr/aarch64-linux-gnu/bin/aarch64-none-linux-gnu-gcc)
-set(CMAKE_CXX_COMPILER /usr/aarch64-linux-gnu/bin/aarch64-none-linux-gnu-g++)
-
 # Build debug version
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     message(STATUS "Debug mode")
