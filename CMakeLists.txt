@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13)
 
 # Optional override:
 #   cmake -DIRIS_FORCE_NATIVE=ON ...
@@ -7,11 +7,13 @@ option(IRIS_FORCE_NATIVE "Force native build even on x86_64 host" OFF)
 # Auto-select cross toolchain on x86_64 Linux host if available.
 # This must happen BEFORE project().
 if(NOT IRIS_FORCE_NATIVE AND NOT DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-    string(TOLOWER "${CMAKE_HOST_SYSTEM_PROCESSOR}" IRIS_HOST_ARCH)
+    cmake_host_system_information(RESULT IRIS_HOST_ARCH QUERY OS_PLATFORM)
+    string(TOLOWER "${IRIS_HOST_ARCH}" IRIS_HOST_ARCH)
+    message(STATUS "Host architecture: ${IRIS_HOST_ARCH}")
 
-    set(IRIS_CROSS_C   "/usr/aarch64-linux-gnu/bin/aarch64-none-linux-gnu-gcc")
-    set(IRIS_CROSS_CXX "/usr/aarch64-linux-gnu/bin/aarch64-none-linux-gnu-g++")
-    set(IRIS_TOOLCHAIN "${CMAKE_CURRENT_LIST_DIR}/cmake/toolchains/aarch64-linux-gnu.cmake")
+    set(IRIS_CROSS_C   "/usr/bin/aarch64-linux-gnu-gcc")
+    set(IRIS_CROSS_CXX "/usr/bin/aarch64-linux-gnu-g++")
+    set(IRIS_TOOLCHAIN "${CMAKE_CURRENT_LIST_DIR}/third-parties/aarch64_toolchain.cmake")
 
     if(IRIS_HOST_ARCH MATCHES "^(x86_64|amd64)$"
        AND EXISTS "${IRIS_CROSS_C}"
@@ -66,12 +68,12 @@ find_package(Threads REQUIRED)
 if(CMAKE_CROSSCOMPILING)
     message(STATUS "Cross-compiling for ${CMAKE_SYSTEM_PROCESSOR}")
 
-    include_directories(
+    target_include_directories(iris_v4l2_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/third-parties/jsoncpp/output/include
         ${CMAKE_CURRENT_SOURCE_DIR}/third-parties/ffmpeg/output/include
     )
 
-    link_directories(
+    target_link_directories(iris_v4l2_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/third-parties/jsoncpp/output/lib
         ${CMAKE_CURRENT_SOURCE_DIR}/third-parties/ffmpeg/output/lib
     )
