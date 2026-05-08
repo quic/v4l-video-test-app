@@ -171,6 +171,53 @@ chmod +x iris_v4l2_test
 ```bash
 ./iris_v4l2_test --loglevel 12 --config ./data/config/h264Decoder.json
 ```
+### 2.4 Build this project natively
+
+In some conditions, this project can be built with native libs (for example, to be built within the building process of system distros, or for local development and testing on an x86_64 host).
+
+#### 2.4.1. How it works
+
+When the CMake option `-DIRIS_FORCE_NATIVE=ON` is passed, the build system skips the aarch64 cross-compilation toolchain and uses the host's native compiler and system-installed libraries instead. In this mode, CMake resolves the following dependencies via the host package manager rather than from the pre-built third-party binaries under `third-parties/`:
+
+- **FFmpeg** (`libavformat`, `libavcodec`, `libswresample`, `libavutil`) — located via `pkg-config`
+- **JsonCpp** — located via CMake's `find_package`
+
+#### 2.4.2. Install required dependencies
+
+Make sure the following packages are installed on your host system before building:
+
+```bash
+sudo apt update
+sudo apt install -y pkg-config libavformat-dev libavcodec-dev libswresample-dev libavutil-dev libjsoncpp-dev
+```
+
+| Package | Purpose |
+|---|---|
+| `pkg-config` | Required by CMake to locate FFmpeg libraries |
+| `libavformat-dev` | FFmpeg demuxer (avformat) |
+| `libavcodec-dev` | FFmpeg codec (avcodec) |
+| `libswresample-dev` | FFmpeg resampler (swresample) |
+| `libavutil-dev` | FFmpeg utility (avutil) |
+| `libjsoncpp-dev` | JSON configuration parser |
+
+#### 2.4.3. Build with native mode
+
+Pass `-DIRIS_FORCE_NATIVE=ON` to CMake when configuring the build. The provided `build.sh` already includes this flag:
+
+```bash
+cd v4l-video-test-app/
+chmod +x build.sh
+./build.sh
+```
+
+The script runs the following CMake commands internally:
+
+```bash
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DIRIS_FORCE_NATIVE=ON
+cmake --build .
+```
+
+On a successful build, the executable `iris_v4l2_test` will be produced in the `build/` directory.
 
 ## 3. Tags Table
 
@@ -322,4 +369,3 @@ This table specify the vaild controls which can be used and their possible value
 ## 5. License
 
 Project is licensed under the **BSD-3-Clause-Clear License**. See [LICENSE.txt](https://github.com/quic/v4l-video-test-app/blob/master/LICENSE.txt) for the full license text.
-
