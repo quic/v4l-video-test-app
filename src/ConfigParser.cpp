@@ -247,6 +247,8 @@ int parseJsonConfigs(
             CHECK_MANDATORY(testConfig, FrameRate, Int);
             CHECK_OPTIONAL(testConfig, InputBufferCount, Int, 32);
             CHECK_OPTIONAL(testConfig, OutputBufferCount, Int, 32);
+            CHECK_OPTIONAL(testConfig, DownScaleWidth, Int, 0);
+            CHECK_OPTIONAL(testConfig, DownScaleHeight, Int, 0);
         } else {
             CHECK_OPTIONAL(testConfig, InputBufferCount, Int, 16);
             CHECK_OPTIONAL(testConfig, OutputBufferCount, Int, 16);

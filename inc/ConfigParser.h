@@ -54,6 +54,8 @@ struct ConfigureStruct {
     int FrameRate;
     int PauseAtFrame;
     int OperatingRate;
+    int DownScaleWidth;
+    int DownScaleHeight;
     int PauseDurationMS;
     int InputBufferCount;
     int OutputBufferCount;

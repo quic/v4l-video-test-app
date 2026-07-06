@@ -95,6 +95,11 @@ class V4l2Codec {
         mHeight = height;
         return 0;
     }
+    int setDownScaleResolution(int DownScaleWidth, int DownScaleHeight) {
+        mDownScaleWidth = DownScaleWidth;
+        mDownScaleHeight = DownScaleHeight;
+        return 0;
+    }
     int getFrameWidth() const { return mWidth; }
     int getFrameHeight() const { return mHeight; }
     int getFrameStride() const { return mStride; }
@@ -204,6 +209,8 @@ class V4l2Codec {
     int mOutputSize = 0;
     int mWidth = 0;
     int mHeight = 0;
+    int mDownScaleWidth = 0;
+    int mDownScaleHeight = 0;
     int mOBufWidth = 0;
     int mOBufHeight = 0;
     int mStride = 0;

@@ -359,6 +359,16 @@ int V4l2Encoder::configureOutput() {
     }
     mOutputSize = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
 
+
+    if (mDownScaleWidth && mDownScaleHeight) {
+        fmt.fmt.pix_mp.width = mDownScaleWidth;
+        fmt.fmt.pix_mp.height = mDownScaleHeight;
+        ret = mV4l2Driver->setFormat(&fmt);
+        if (ret) {
+            return ret;
+        }
+    }
+
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     ret = mV4l2Driver->getControl(&ctrl);
     if (ret) {

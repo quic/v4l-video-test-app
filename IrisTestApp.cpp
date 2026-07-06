@@ -210,6 +210,7 @@ static int TestingEncoder(ConfigureStruct& config, std::string sessionId) {
         mEncoder->setOutputActualCount(config.OutputBufferCount);
     }
     mEncoder->setResolution(config.Width, config.Height);
+    mEncoder->setDownScaleResolution(config.DownScaleWidth, config.DownScaleHeight);
     mEncoder->setNALEncoding(false);
     mEncoder->setDump(config.DumpInputPath, config.Outputpath);
 
