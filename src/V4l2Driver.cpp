@@ -989,9 +989,11 @@ int V4l2Driver::enumFrameInterval(v4l2_frmivalenum* fival) {
         PrintCurrentTrace("V4l2Driver::enumFrameInterval failed");
         return -EINVAL;
     }
-    if (fival->type != V4L2_FRMIVAL_TYPE_STEPWISE) {
-        LOGE("enumFramesize: type (%d) returned in not stepwise\n", fival->type);
-        PrintCurrentTrace("V4l2Driver::enumFrameInterval: non-stepwise type");
+    if (fival->type != V4L2_FRMIVAL_TYPE_STEPWISE &&
+        fival->type != V4L2_FRMIVAL_TYPE_CONTINUOUS) {
+        LOGE("enumFrameInterval: type (%d) returned is neither stepwise nor "
+             "continuous\n", fival->type);
+        PrintCurrentTrace("V4l2Driver::enumFrameInterval: unsupported type");
         return -EINVAL;
     }
     LOGV("enumFrameInterval: resoltion [%u x %u], interval [%u / %u] to [%u / "
