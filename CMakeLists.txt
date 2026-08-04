@@ -42,7 +42,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
+set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 # Includes
 include_directories(
