@@ -146,7 +146,7 @@ int V4l2Encoder::queryControlsAVC(uint32_t level) {
         querymenu.index = i;
 
         ret = mV4l2Driver->queryMenu(&querymenu);
-        if (!ret) {
+        if (ret != 0) {
             continue;
         }
 
