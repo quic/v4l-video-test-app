@@ -798,8 +798,8 @@ int V4l2Decoder::queueBuffers(int maxFrameCnt) {
         }
 
         if (!isInputAvailable()) {
-            if (retry_count >= 100) {
-                LOGE("%s: wait for input buffer timeout(1s)\n", __func__);
+            if (retry_count >= 1000) {
+                LOGE("%s: wait for input buffer timeout(10s)\n", __func__);
                 PrintCurrentTrace("V4l2Decoder::queueBuffers: wait for input buffer timeout");
                 return -ETIMEDOUT;
             }

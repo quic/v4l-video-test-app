@@ -571,7 +571,7 @@ int V4l2Driver::threadLoop() {
         }
 
         int ret = poll(pollFds, 1, 1000);
-        if (ret == -ETIMEDOUT) {
+        if (!ret) {
             LOGW("V4l2Driver: poll timedout\n");
             continue;
         } else if (ret < 0 && errno != EINTR && errno != EAGAIN) {
